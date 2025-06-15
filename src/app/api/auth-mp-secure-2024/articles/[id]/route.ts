@@ -4,19 +4,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
+interface RouteParams {
+  params: { id: string };
+}
+
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: RouteParams // Corrected: Destructure params from the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
-    if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const currentAdmin = verifySessionPayload(sessionToken);
-    if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
+    if (!currentAdmin?.is_admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const { id } = context.params;
+    const { id } = params; // Now you can directly use the id
 
     const { data, error } = await supabaseAdmin
       .from('articles')
@@ -26,13 +34,17 @@ export async function GET(
 
     if (error) {
       console.error('Fetch single article error:', error);
-      throw new Error('Article not found or failed to fetch.');
+      // It's better to provide a more specific error for the client
+      if (error.code === 'PGRST116') { // PostgREST code for "No rows found"
+        return NextResponse.json({ error: 'Article not found.' }, { status: 404 });
+      }
+      throw new Error('Failed to fetch the article.');
     }
 
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
       { status: 500 }
     );
   }
@@ -41,16 +53,20 @@ export async function GET(
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: RouteParams // Corrected: Destructure params from the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
-    if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    if (!sessionToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const currentAdmin = verifySessionPayload(sessionToken);
-    if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
+    if (!currentAdmin?.is_admin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const { id } = context.params;
+    const { id } = params;
     const body = await request.json();
     const { title, content, summary, thumbnail, is_published, publish_date, slug, tags } = body;
 
@@ -77,7 +93,7 @@ export async function PUT(
 
     if (error) {
       console.error("Update Error:", error);
-      if (error.code === '23505') {
+      if (error.code === '23505') { // Postgres unique violation
         throw new Error('Failed to update. An article with this slug already exists.');
       }
       throw new Error('Failed to update the article.');
@@ -87,7 +103,7 @@ export async function PUT(
 
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
       { status: 500 }
     );
   }
@@ -96,16 +112,20 @@ export async function PUT(
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: RouteParams // Corrected: Destructure params from the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
-    if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    if (!sessionToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const currentAdmin = verifySessionPayload(sessionToken);
-    if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
+    if (!currentAdmin?.is_admin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const { id } = context.params;
+    const { id } = params;
     const { error } = await supabaseAdmin
       .from('articles')
       .delete()
@@ -119,7 +139,7 @@ export async function DELETE(
     return NextResponse.json({ message: 'Article deleted successfully' });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
       { status: 500 }
     );
   }
