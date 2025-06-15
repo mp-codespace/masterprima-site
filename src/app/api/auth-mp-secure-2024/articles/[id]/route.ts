@@ -4,6 +4,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
+// Helper type for PostgREST error (Supabase errors)
+type PostgrestError = {
+  code?: string;
+  message?: string;
+};
+
+function isPostgrestError(error: unknown): error is PostgrestError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code?: unknown }).code === 'string'
+  );
+}
+
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
@@ -29,7 +44,10 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -71,7 +89,8 @@ export async function PUT(
 
     if (error) {
       console.error('Update Error:', error);
-      if ((error as any).code === '23505') {
+      // Type-safe check for PostgREST error with code property
+      if (isPostgrestError(error) && error.code === '23505') {
         throw new Error('Failed to update. An article with this slug already exists.');
       }
       throw new Error('Failed to update the article.');
@@ -79,7 +98,10 @@ export async function PUT(
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -107,6 +129,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Article deleted successfully' });
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
