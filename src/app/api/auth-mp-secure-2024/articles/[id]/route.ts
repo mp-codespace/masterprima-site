@@ -4,16 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-// Define proper types for the route context
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
 // --- GET a single article by ID ---
-export async function GET(request: NextRequest, context: RouteContext) {
-  const { id } = context.params;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -47,8 +43,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 // --- PUT Method: To update an article ---
-export async function PUT(request: NextRequest, context: RouteContext) {
-  const { id } = context.params;
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -104,8 +103,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 }
 
 // --- DELETE an article by ID ---
-export async function DELETE(request: NextRequest, context: RouteContext) {
-  const { id } = context.params;
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
