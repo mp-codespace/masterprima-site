@@ -1,36 +1,17 @@
-// src/app/api/auth-mp-secure-2024/articles/[id]/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-// Helper type for PostgREST error (Supabase errors)
-type PostgrestError = {
-  code?: string;
-  message?: string;
-};
-
-function isPostgrestError(error: unknown): error is PostgrestError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof (error as { code?: unknown }).code === 'string'
-  );
-}
-
 // --- GET a single article by ID ---
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
-    const { id } = params;
+    // Select all columns for the edit page
     const { data, error } = await supabaseAdmin
       .from('articles')
       .select('*')
@@ -44,25 +25,19 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 
 // --- PUT Method: To update an article ---
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
-    const { id } = params;
     const body = await request.json();
     const { title, content, summary, thumbnail, is_published, publish_date, slug, tags } = body;
 
@@ -81,57 +56,48 @@ export async function PUT(
         publish_date: publish_date || null,
         slug,
         tags: tags || null,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .eq('article_id', id)
       .select()
       .single();
 
     if (error) {
-      console.error('Update Error:', error);
-      // Type-safe check for PostgREST error with code property
-      if (isPostgrestError(error) && error.code === '23505') {
+      console.error("Update Error:", error);
+      if (error.code === '23505') {
         throw new Error('Failed to update. An article with this slug already exists.');
       }
       throw new Error('Failed to update the article.');
     }
 
     return NextResponse.json(data);
+
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 
 // --- DELETE an article by ID ---
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
-    const { id } = params;
     const { error } = await supabaseAdmin
       .from('articles')
       .delete()
       .eq('article_id', id);
 
     if (error) {
-      console.error('Delete Error:', error);
+      console.error("Delete Error:", error);
       throw new Error('Failed to delete the article.');
     }
 
     return NextResponse.json({ message: 'Article deleted successfully' });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
