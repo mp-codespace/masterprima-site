@@ -7,7 +7,8 @@ import { verifySessionPayload } from '@/lib/auth/utils';
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
+  // Corrected the signature to avoid destructuring where hidden characters might exist.
+  context: { params: { id: string } }
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
@@ -20,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { id } = params; // Now you can directly use the id
+    const { id } = context.params; // Extracted id from context
 
     const { data, error } = await supabaseAdmin
       .from('articles')
@@ -30,7 +31,7 @@ export async function GET(
 
     if (error) {
       console.error('Fetch single article error:', error);
-      // It's better to provide a more specific error for the client
+      // Provide a more specific error for the client
       if (error.code === 'PGRST116') { // PostgREST code for "No rows found"
         return NextResponse.json({ error: 'Article not found.' }, { status: 404 });
       }
@@ -39,17 +40,16 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
+  // Corrected the signature to avoid destructuring.
+  context: { params: { id: string } }
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
@@ -62,7 +62,7 @@ export async function PUT(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { id } = params;
+    const { id } = context.params;
     const body = await request.json();
     const { title, content, summary, thumbnail, is_published, publish_date, slug, tags } = body;
 
@@ -98,17 +98,16 @@ export async function PUT(
     return NextResponse.json(data);
 
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
+  // Corrected the signature to avoid destructuring.
+  context: { params: { id: string } }
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
@@ -121,7 +120,7 @@ export async function DELETE(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { id } = params;
+    const { id } = context.params;
     const { error } = await supabaseAdmin
       .from('articles')
       .delete()
@@ -134,9 +133,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Article deleted successfully' });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
