@@ -4,14 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-interface RouteParams {
-  params: { id: string };
-}
-
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams // Corrected: Destructure params from the second argument
+  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
@@ -53,7 +49,7 @@ export async function GET(
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams // Corrected: Destructure params from the second argument
+  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
@@ -112,7 +108,7 @@ export async function PUT(
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams // Corrected: Destructure params from the second argument
+  { params }: { params: { id: string } } // Corrected: Inlined the type for the second argument
 ) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
