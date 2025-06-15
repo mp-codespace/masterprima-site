@@ -7,9 +7,9 @@ import { verifySessionPayload } from '@/lib/auth/utils';
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -45,9 +45,9 @@ export async function GET(
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -105,9 +105,9 @@ export async function PUT(
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
