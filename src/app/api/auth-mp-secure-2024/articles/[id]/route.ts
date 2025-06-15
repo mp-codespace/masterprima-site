@@ -1,5 +1,3 @@
-// src/app/api/auth-mp-secure-2024/articles/[id]/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
@@ -7,10 +5,10 @@ import { verifySessionPayload } from '@/lib/auth/utils';
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
-  
+  const { id } = params;
+
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -18,7 +16,7 @@ export async function GET(
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
-    
+
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
@@ -45,10 +43,10 @@ export async function GET(
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
-  
+  const { id } = params;
+
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -56,7 +54,7 @@ export async function PUT(
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
-    
+
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
@@ -105,10 +103,10 @@ export async function PUT(
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
-  
+  const { id } = params;
+
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -116,7 +114,7 @@ export async function DELETE(
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
-    
+
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
