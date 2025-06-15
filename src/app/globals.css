@@ -1,26 +1,115 @@
-@import "tailwindcss";
+/* src\app\globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Light Mode Colors */
+  --color-body: #333333;
+  --color-muted: #6B7280;
+  --color-cta-bg: #FFFFFF;
+  --color-cta-text: #E50012;
+  --color-background: #FFFCF9;
+  
+  /* Brand Colors */
+  --color-primary: #F97316;
+  --color-accent: #E50012;
+  --color-secondary: #FFF7ED;
+  --color-highlight: #FFF9DB;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark Mode Colors */
+    --color-heading: #FFFFFF;
+    --color-body: #CCCCCC;
+    --color-muted: #999999;
+    --color-cta-bg: #E50012;
+    --color-cta-text: #FFFFFF;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    background: var(--color-background);
+    color: var(--color-body);
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-urbanist), 'Urbanist', sans-serif;
+    color: var(--color-heading);
+  }
+  
+  /* Typography Classes sesuai dengan design system */
+  .text-hero {
+    font-family: var(--font-urbanist), 'Urbanist', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  
+  .text-section-heading {
+    font-family: var(--font-urbanist), 'Urbanist', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  
+  .text-subheading {
+    font-family: var(--font-urbanist), 'Urbanist', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  
+  .text-body-main {
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  .text-body-small {
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  .text-label {
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  
+  .text-cta-button {
+    font-family: var(--font-urbanist), 'Urbanist', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  
+  .text-footer-link {
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 }
+
+.bn-container,
+.bn-editor,
+.ProseMirror,
+.bn-block-group,
+.bn-block,
+.bn-block-content {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+.bn-side-menu {
+  left: 0 !important;
+}
+
