@@ -11,6 +11,22 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  // === Point 1: Glob pattern for ALL route.ts files ===
+  {
+    files: ["**/route.ts"], // This matches ALL route.ts files anywhere in your project
+    rules: {
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          "ts-nocheck": false,      // Allow @ts-nocheck
+          "ts-ignore": true,
+          "ts-expect-error": true,
+          "ts-check": true
+        }
+      ]
+    }
+  }
 ];
 
 export default eslintConfig;
