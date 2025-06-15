@@ -5,9 +5,9 @@ import { verifySessionPayload } from '@/lib/auth/utils';
 // --- GET a single article by ID ---
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -43,9 +43,9 @@ export async function GET(
 // --- PUT Method: To update an article ---
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
@@ -84,7 +84,6 @@ export async function PUT(
 
     if (error) {
       console.error('Update Error:', error);
-      // Handle Postgres unique constraint error
       if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === '23505') {
         throw new Error('Failed to update. An article with this slug already exists.');
       }
@@ -103,9 +102,9 @@ export async function PUT(
 // --- DELETE an article by ID ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
