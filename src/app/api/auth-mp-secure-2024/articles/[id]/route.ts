@@ -4,16 +4,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-// Helper to get id param from the URL
-function getIdFromRequest(request: NextRequest): string | undefined {
-  // Example: /api/auth-mp-secure-2024/articles/123
-  const segments = request.nextUrl.pathname.split('/');
-  return segments[segments.length - 1];
+// Define proper types for the route context
+interface RouteContext {
+  params: {
+    id: string;
+  };
 }
 
 // --- GET a single article by ID ---
-export async function GET(request: NextRequest) {
-  const id = getIdFromRequest(request);
+export async function GET(request: NextRequest, context: RouteContext) {
+  const { id } = context.params;
+  
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
@@ -45,8 +47,9 @@ export async function GET(request: NextRequest) {
 }
 
 // --- PUT Method: To update an article ---
-export async function PUT(request: NextRequest) {
-  const id = getIdFromRequest(request);
+export async function PUT(request: NextRequest, context: RouteContext) {
+  const { id } = context.params;
+  
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -54,6 +57,7 @@ export async function PUT(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
@@ -83,7 +87,7 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Update Error:', error);
-      // Optionally handle Postgres unique constraint
+      // Handle Postgres unique constraint error
       if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === '23505') {
         throw new Error('Failed to update. An article with this slug already exists.');
       }
@@ -100,8 +104,9 @@ export async function PUT(request: NextRequest) {
 }
 
 // --- DELETE an article by ID ---
-export async function DELETE(request: NextRequest) {
-  const id = getIdFromRequest(request);
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { id } = context.params;
+  
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
@@ -109,6 +114,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return new Response('Unauthorized', { status: 401 });
+    
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return new Response('Forbidden', { status: 403 });
 
