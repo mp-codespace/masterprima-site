@@ -1,10 +1,10 @@
 // src\lib\seo-utils.ts
 
 
-import { Article } from '@/types/articles'; 
+import { Article } from '@/types/articles';
 
 export const siteConfig = {
-  baseUrl: 'https://masterprima.co.id',
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
   siteName: 'MasterPrima Surabaya',
   defaultImage: '/mp.ico',
   twitterHandle: '@masterprima',
