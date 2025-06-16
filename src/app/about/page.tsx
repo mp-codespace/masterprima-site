@@ -7,20 +7,20 @@ import Navbar from '@/components/Navbar';
 import StickyBanner from '@/components/StickyBanner';
 
 export const metadata: Metadata = {
-  title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-  description: 'Kenali MasterPrima lebih dekat. Sejak 2009, kami telah berkomitmen mengantarkan siswa Surabaya meraih prestasi terbaik dengan lokasi strategis dan fasilitas modern.',
-  openGraph: {
     title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-    description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
-    url: '/about',
-  },
-  twitter: {
-    title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-    description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
-  },
-  alternates: {
-    canonical: '/about',
-  },
+    description: 'Kenali MasterPrima lebih dekat. Sejak 2009, kami telah berkomitmen mengantarkan siswa Surabaya meraih prestasi terbaik dengan lokasi strategis dan fasilitas modern.',
+    openGraph: {
+        title: 'Tentang MasterPrima - Sejarah & Visi Kami',
+        description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
+        url: '/about',
+    },
+    twitter: {
+        title: 'Tentang MasterPrima - Sejarah & Visi Kami',
+        description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
+    },
+    alternates: {
+        canonical: '/about',
+    },
 };
 
 const locations = [
@@ -98,12 +98,12 @@ export default function AboutPage() {
         <main className="min-h-screen bg-neutral-cream">
             <StickyBanner />
             <Navbar />
-            
+
             {/* Hero Section */}
             <section className="bg-secondary-sand text-neutral-charcoal py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-neutral-charcoal">
                             Tentang MasterPrima
                         </h1>
                         <p className="text-xl md:text-2xl text-neutral-dark-gray max-w-3xl mx-auto leading-relaxed">
@@ -191,8 +191,8 @@ export default function AboutPage() {
                             <div
                                 key={location.id}
                                 className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${location.isMain
-                                        ? 'ring-2 ring-primary-orange ring-offset-4 ring-offset-white'
-                                        : 'border border-gray-100'
+                                    ? 'ring-2 ring-primary-orange ring-offset-4 ring-offset-white'
+                                    : 'border border-gray-100'
                                     }`}
                             >
                                 {location.isMain && (
