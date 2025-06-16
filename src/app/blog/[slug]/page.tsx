@@ -14,22 +14,19 @@ import {
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-// Fetch article data by slug from your API
 async function getArticleBySlug(slug: string) {
   const res = await fetch(`${baseUrl}/api/public/articles/${slug}`, { cache: "no-store" });
   if (!res.ok) return null;
   const data = await res.json();
-  // ----> Gunakan flat check sesuai output API
   return data && data.article_id ? data : null;
 }
 
-// Generate SEO metadata for this blog article
-export async function generateMetadata(props: any): Promise<Metadata> {
-  const params = (await props).params || props.params;
-  const article = await getArticleBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const article = await getArticleBySlug(resolvedParams.slug);
   if (!article) return {};
 
-  const url = `${baseUrl}/blog/${params.slug}`;
+  const url = `${baseUrl}/blog/${resolvedParams.slug}`;
   return {
     title: article.title,
     description: article.summary || siteConfig.description,
@@ -37,7 +34,7 @@ export async function generateMetadata(props: any): Promise<Metadata> {
     openGraph: generateBlogOGMetadata(
       article.title,
       article.summary,
-      `/blog/${params.slug}`,
+      `/blog/${resolvedParams.slug}`,
       article.thumbnail
     ),
     twitter: generateTwitterMetadata(
@@ -62,10 +59,9 @@ export async function generateMetadata(props: any): Promise<Metadata> {
   };
 }
 
-// The main page - fetch data and render client component
-export default async function BlogDetailPage(props: any) {
-  const params = (await props).params || props.params;
-  const article = await getArticleBySlug(params.slug);
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
+  const article = await getArticleBySlug(resolvedParams.slug);
   if (!article) return notFound();
 
   const structuredData = generateBlogListingStructuredData([article]);

@@ -1,25 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/auth-mp-secure-2024/articles/[id]/view/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-// Helper untuk universal context (object atau promise)
-async function getCtx(context: any) {
-  if (typeof context?.then === "function") {
-    return await context;
-  }
-  return context;
-}
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  // Await params karena Next.js memberikan params sebagai Promise
+  const { id } = await context.params;
 
-export async function POST(request: NextRequest, context: any) {
-  const ctx = await getCtx(context);
-  const id = ctx.params.id;
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }
 
-  // Get the current number of views
+  // Ambil jumlah views saat ini
   const { data, error: fetchError } = await supabaseAdmin
     .from('articles')
     .select('views')
@@ -32,6 +24,7 @@ export async function POST(request: NextRequest, context: any) {
 
   const newViews = (typeof data.views === 'number' ? data.views : 0) + 1;
 
+  // Update views
   const { error: updateError } = await supabaseAdmin
     .from('articles')
     .update({ views: newViews })
