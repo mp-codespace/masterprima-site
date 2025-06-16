@@ -1,13 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/auth-mp-secure-2024/articles/[id]/view/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+// Helper untuk universal context (object atau promise)
+async function getCtx(context: any) {
+  if (typeof context?.then === "function") {
+    return await context;
+  }
+  return context;
+}
+
+export async function POST(request: NextRequest, context: any) {
+  const ctx = await getCtx(context);
+  const id = ctx.params.id;
   if (!id) {
     return NextResponse.json({ error: 'Missing article ID' }, { status: 400 });
   }

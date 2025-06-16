@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/blog/[slug]/page.tsx
 
 import { notFound } from "next/navigation";
@@ -23,7 +24,9 @@ async function getArticleBySlug(slug: string) {
 }
 
 // Generate SEO metadata for this blog article
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: any): Promise<Metadata> {
+  // Universal, aman!
+  const params = (await props).params || props.params;
   const article = await getArticleBySlug(params.slug);
   if (!article) return {};
 
@@ -61,11 +64,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // The main page - fetch data and render client component
-export default async function BlogDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function BlogDetailPage(props: any) {
+  // Universal, aman!
+  const params = (await props).params || props.params;
   const article = await getArticleBySlug(params.slug);
   if (!article) return notFound();
 

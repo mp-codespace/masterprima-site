@@ -1,13 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/public/blog/[slug]/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
-  const { slug } = params;
+// Helper universal context (promise atau object)
+async function getCtx(context: any) {
+  if (typeof context?.then === "function") return await context;
+  return context;
+}
+
+export async function GET(request: NextRequest, context: any) {
+  const ctx = await getCtx(context);
+  const slug = ctx.params.slug;
+
   const { data, error } = await supabaseAdmin
     .from('articles')
     .select('article_id, title, summary, content, slug, thumbnail, publish_date, author_name, tags')

@@ -1,17 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/auth-mp-secure-2024/pricing/[id]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+// Helper: universal context handler
+async function getCtx(context: any) {
+  if (typeof context?.then === "function") {
+    return await context;
+  }
+  return context;
+}
+
+export async function PUT(request: NextRequest, context: any) {
   try {
+    const ctx = await getCtx(context);
+    const id = ctx.params.id;
+
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { id } = params;
     const body = await request.json();
 
     const { data, error } = await supabaseAdmin
@@ -28,14 +39,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: any) {
   try {
+    const ctx = await getCtx(context);
+    const id = ctx.params.id;
+
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const currentAdmin = verifySessionPayload(sessionToken);
     if (!currentAdmin?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
-    const { id } = params;
 
     const { error } = await supabaseAdmin
       .from('pricing_plans')

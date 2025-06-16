@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
@@ -7,11 +8,10 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // Allow all
+        hostname: "**", // Allow all hosts
       },
     ],
   },
-  // Security headers
   headers: async () => [
     {
       source: "/(.*)",
@@ -35,7 +35,6 @@ const nextConfig = {
       ],
     },
   ],
-  // Redirects
   redirects: async () => [
     {
       source: "/admin",
@@ -50,4 +49,4 @@ const nextConfig = {
   ],
 };
 
-module.exports = nextConfig;
+export default nextConfig;
