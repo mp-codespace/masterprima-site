@@ -6,7 +6,7 @@ This project is part of academic research for a thesis and demonstrates the inte
 
 ## Features
 
-* ✨ Next.js 14 App Router (React 18)
+* ✨ Next.js 15.3.3 App Router (React 19)
 * 🎨 Tailwind CSS for modern, responsive design
 * 🗃️ Supabase as the backend/database
 * 📈 Data visualization with Recharts
