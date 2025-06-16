@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import StickyBanner from '@/components/StickyBanner';
 import { Check, Star, Crown, Award } from 'lucide-react';
+import { supabaseAdmin } from '@/lib/supabase/admin'; 
 
 export const metadata: Metadata = {
   title: 'Harga & Paket Bimbel MasterPrima',
@@ -44,23 +45,28 @@ type Plan = {
 
 async function getPricingData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    
-    const [categoriesRes, plansRes] = await Promise.all([
-      fetch(`${baseUrl}/api/public/pricing-categories`, { cache: 'no-store' }),
-      fetch(`${baseUrl}/api/public/pricing`, { cache: 'no-store' }),
-    ]);
+    // Membuat dua promise untuk dijalankan secara paralel
+    const categoriesPromise = supabaseAdmin
+      .from('pricing_categories') // Pastikan nama tabel ini benar
+      .select('*');
 
-    if (!categoriesRes.ok || !plansRes.ok) {
-        throw new Error('Failed to fetch pricing data');
+    const plansPromise = supabaseAdmin
+      .from('pricing_plans')
+      .select('*, category_id')
+      .eq('is_active', true);
+
+    // Menjalankan kedua promise
+    const [{ data: categories, error: categoriesError }, { data: allPlans, error: plansError }] = await Promise.all([categoriesPromise, plansPromise]);
+
+    // Error handling jika salah satu query gagal
+    if (categoriesError || plansError) {
+      console.error("Supabase error:", categoriesError || plansError);
+      throw new Error('Gagal mengambil data harga dari Supabase');
     }
 
-    const categories = await categoriesRes.json();
-    const allPlans = await plansRes.json();
-    
-    const activePlans = allPlans.filter((p: Plan) => p.is_active);
+    // Mengembalikan data dengan struktur yang sama seperti sebelumnya
+    return { categories: categories || [], plans: allPlans || [] };
 
-    return { categories, plans: activePlans };
   } catch (error) {
     console.error("Error fetching pricing data:", error);
     return { categories: [], plans: [] };

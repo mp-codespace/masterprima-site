@@ -1,5 +1,4 @@
-// src\app\blog\[slug]\BlogDetailClient.tsx
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -17,6 +16,22 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useArticleViews } from "@/hooks/useArticleViews";
 import Image from "next/image";
+
+// Fungsi untuk membuat slug yang bersih dan unik dari teks
+const slugify = (text: string): string => {
+  const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;';
+  const b = 'aaaaaaaaaacccddeeeeeeeegghiiiiiilmnnnnoooooooooprrsssssttuuuuuuuuuwxyyzzz------';
+  const p = new RegExp(a.split('').join('|'), 'g');
+
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-') // Ganti spasi dengan -
+    .replace(p, c => b.charAt(a.indexOf(c))) // Ganti karakter spesial
+    .replace(/&/g, '-and-') // Ganti & dengan 'and'
+    .replace(/[^\w\-]+/g, '') // Hapus semua karakter non-kata
+    .replace(/\-\-+/g, '-') // Ganti -- dengan -
+    .replace(/^-+/, '') // Hapus - dari awal
+    .replace(/-+$/, ''); // Hapus - dari akhir
+};
 
 
 function UniversalContentView({ content }: { content: string }) {
@@ -68,70 +83,108 @@ function UniversalContentView({ content }: { content: string }) {
 // --- Table of Contents ---
 type HeadingItem = { id: string; text: string; level: number; };
 
+// Fungsi parseHeadings yang sudah diperbaiki untuk membuat slug unik
 function parseHeadings(content: string): HeadingItem[] {
-  let isBlockNote = false;
-  let parsed: unknown;
   const headings: HeadingItem[] = [];
-  try {
-    parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
-      isBlockNote = true;
-      let headingCount = 0;
-      (parsed as PartialBlock[]).forEach((block) => {
-        if (
-          (block as PartialBlock).type === "heading" &&
-          (block as PartialBlock).props &&
-          "level" in (block as PartialBlock).props!
-        ) {
-          let txt = "";
-          if (Array.isArray((block as PartialBlock).content)) {
-            ((block as PartialBlock).content as unknown[]).forEach((item) => {
-              if (item && typeof item === "object" && "text" in item) {
-                txt += (item as { text: string }).text;
-              }
-            });
-          }
-          headings.push({
-            id: `blocknote-heading-${headingCount++}`,
-            text: txt,
-            level: ((block as PartialBlock).props as { level?: number }).level || 1,
-          });
-        }
-      });
+  const slugCounts: { [key: string]: number } = {};
+
+  const generateUniqueSlug = (text: string) => {
+    const baseSlug = slugify(text);
+    if (slugCounts[baseSlug] === undefined) {
+      slugCounts[baseSlug] = 0;
+      return baseSlug;
     }
-  } catch {
-    isBlockNote = false;
+    slugCounts[baseSlug]++;
+    return `${baseSlug}-${slugCounts[baseSlug]}`;
+  };
+  
+  // Helper function to recursively extract text from BlockNote's inline content,
+  // handling nested structures like links.
+  const getTextFromInlineContent = (items: any[] | undefined): string => {
+      if (!Array.isArray(items)) {
+          return '';
+      }
+      return items.map(item => {
+          if (typeof item === 'string') {
+              return item;
+          }
+          // If it's a link, recursively get text from its content
+          if (item.type === 'link' && item.content) {
+              return getTextFromInlineContent(item.content);
+          }
+          // Otherwise, it's a text object
+          return item.text || '';
+      }).join('');
   }
 
-  if (!isBlockNote) {
-    const lines = content.split("\n");
-    let headingCount = 0;
-    lines.forEach(line => {
-      const match = /^(#{1,6})\s+(.+)$/.exec(line);
-      if (match) {
-        const level = match[1].length;
-        headings.push({
-          id: `md-heading-${headingCount++}`,
-          text: match[2],
-          level,
-        });
-      }
-    });
-  }
+
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      (parsed as PartialBlock[]).forEach((block) => {
+        if (block.type === 'heading' && block.props?.level) {
+          
+          // Use the robust helper function to extract text
+          const text = getTextFromInlineContent(block.content as any[]);
+
+          if (text) {
+            headings.push({
+              id: generateUniqueSlug(text),
+              text: text,
+              level: parseInt(String(block.props.level), 10),
+            });
+          }
+        }
+      });
+      return headings;
+    }
+  } catch {}
+
+  // Parsing untuk Markdown
+  const lines = content.split("\n");
+  lines.forEach(line => {
+    const match = /^(#{1,6})\s+(.+)$/.exec(line);
+    if (match) {
+      const text = match[2].trim();
+      const level = match[1].length;
+      headings.push({
+        id: generateUniqueSlug(text),
+        text: text,
+        level: level,
+      });
+    }
+  });
+
   return headings;
 }
 
+// Komponen TableOfContents yang sudah diperbaiki
 function TableOfContents({ content }: { content: string }) {
   const headings = useMemo(() => parseHeadings(content), [content]);
 
+  // useEffect ini sekarang secara andal menemukan elemen judul yang benar dan memberinya ID.
   useEffect(() => {
-    headings.forEach(({ id }, i) => {
-      const headingElems = document.querySelectorAll(`h1, h2, h3, h4, h5, h6`);
-      if (headingElems[i]) {
-        headingElems[i].setAttribute('id', id);
+    const articleContent = document.getElementById('main-content');
+    if (!articleContent) return;
+
+    // Ambil semua elemen heading dari dalam container artikel
+    const headingElements = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const parserHeadingsQueue = [...headings];
+
+    // Cocokkan elemen DOM dengan data heading berdasarkan konten teksnya
+    headingElements.forEach(element => {
+      const elementText = element.textContent?.trim();
+      if (!elementText) return;
+
+      const matchIndex = parserHeadingsQueue.findIndex(h => h.text.trim() === elementText);
+
+      if (matchIndex !== -1) {
+        // Jika cocok, berikan ID dan hapus dari antrian agar tidak ada duplikat
+        element.id = parserHeadingsQueue[matchIndex].id;
+        parserHeadingsQueue.splice(matchIndex, 1);
       }
     });
-  }, [headings, content]);
+  }, [headings]); // Dijalankan kembali jika `headings` berubah
 
   const [activeId, setActiveId] = useState('');
   useEffect(() => {
@@ -152,7 +205,7 @@ function TableOfContents({ content }: { content: string }) {
     });
 
     return () => observer.disconnect();
-  }, [headings, content]);
+  }, [headings]);
 
   if (headings.length <= 2) return null;
 
@@ -183,8 +236,8 @@ function TableOfContents({ content }: { content: string }) {
                   }
                 }}
                 className={`block py-2.5 px-3 text-sm rounded-lg transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${activeId === id
-                  ? 'text-blue-700 bg-blue-50 font-medium border-l-4 border-blue-600 shadow-sm'
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-blue-700 bg-blue-50 font-medium border-l-4 border-blue-600 shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                   } ${level === 1 ? 'ml-0 font-medium' :
                     level === 2 ? 'ml-4' :
                       level === 3 ? 'ml-8' : 'ml-12'
@@ -207,7 +260,7 @@ function TableOfContents({ content }: { content: string }) {
   );
 }
 
-// --- ShareActions (hydration-safe, accessibility labels) ---
+// --- ShareActions (tidak ada perubahan) ---
 function ShareActions({ title }: { title: string }) {
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState('');
