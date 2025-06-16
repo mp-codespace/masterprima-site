@@ -44,20 +44,23 @@ type Plan = {
 
 async function getPricingData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    
+    const baseUrl =
+      typeof window === 'undefined'
+        ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        : '';
+
     const [categoriesRes, plansRes] = await Promise.all([
       fetch(`${baseUrl}/api/public/pricing-categories`, { cache: 'no-store' }),
       fetch(`${baseUrl}/api/public/pricing`, { cache: 'no-store' }),
     ]);
 
     if (!categoriesRes.ok || !plansRes.ok) {
-        throw new Error('Failed to fetch pricing data');
+      throw new Error('Failed to fetch pricing data');
     }
 
     const categories = await categoriesRes.json();
     const allPlans = await plansRes.json();
-    
+
     const activePlans = allPlans.filter((p: Plan) => p.is_active);
 
     return { categories, plans: activePlans };
