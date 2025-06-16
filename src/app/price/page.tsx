@@ -44,10 +44,7 @@ type Plan = {
 
 async function getPricingData() {
   try {
-    const baseUrl =
-      typeof window === 'undefined'
-        ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-        : '';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
     const [categoriesRes, plansRes] = await Promise.all([
       fetch(`${baseUrl}/api/public/pricing-categories`, { cache: 'no-store' }),
@@ -92,7 +89,6 @@ const commonFeatures = [
   "Ruangan belajar nyaman & berAC"
 ];
 
-
 export default async function PricePage() {
   const { categories, plans } = await getPricingData();
 
@@ -105,7 +101,6 @@ export default async function PricePage() {
       <StickyBanner />
       <Navbar />
 
-      {/* Header */}
       <section className="pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-full text-sm font-medium text-orange-700 mb-6">
@@ -120,13 +115,12 @@ export default async function PricePage() {
         </div>
       </section>
 
-      {/* Pricing Categories */}
       <section className="pb-24">
         <div className="max-w-7xl mx-auto px-4 space-y-20">
           {orderedCategories.length === 0 ? (
             <div className="text-center py-20 text-gray-500">
-                <h3 className="text-2xl font-semibold mb-4">Paket Belum Tersedia</h3>
-                <p>Silakan periksa kembali nanti atau hubungi kami untuk informasi lebih lanjut.</p>
+              <h3 className="text-2xl font-semibold mb-4">Paket Belum Tersedia</h3>
+              <p>Silakan periksa kembali nanti atau hubungi kami untuk informasi lebih lanjut.</p>
             </div>
           ) : (
             orderedCategories.map((category) => (
@@ -216,7 +210,6 @@ export default async function PricePage() {
         </div>
       </section>
 
-      {/* Fasilitas Eksklusif */}
       <section className="py-20 bg-gradient-to-r from-orange-50 to-red-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-6">
@@ -240,7 +233,6 @@ export default async function PricePage() {
         </div>
       </section>
 
-      {/* WhatsApp CTA */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-12 text-white">
