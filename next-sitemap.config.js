@@ -3,5 +3,13 @@
 module.exports = {
   siteUrl: 'https://masterprima.site',
   generateRobotsTxt: true,
-  exclude: ['/auth-mp-2024'], 
+  exclude: [
+    '/auth-mp-secure-2024/*',   // dashboard & auth
+    // Path berikut hanya jika benar-benar ingin DITUTUP dari Google
+    '/',
+    '/about',
+    '/blog',
+    '/price',
+    '/blog/*',                 // untuk semua detail post: /blog/slug
+  ],
 };
