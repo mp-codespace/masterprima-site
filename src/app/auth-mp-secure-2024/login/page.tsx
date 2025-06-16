@@ -14,7 +14,6 @@ const CompanyLogo = () => (
   </svg>
 );
 
-
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +24,9 @@ export default function LoginPage() {
 
   // Redirect if user is already logged in
   useEffect(() => {
-    fetch('/api/auth-mp-secure-2024/me').then(res => {
+    fetch('/api/auth-mp-secure-2024/me', {
+      credentials: 'include', // Penting agar cookie ikut dikirim
+    }).then(res => {
       if (res.ok) {
         router.push('/auth-mp-secure-2024/dashboard');
       }
@@ -42,6 +43,7 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        credentials: 'include', // Penting agar cookie dari API tersimpan
       });
       const data = await response.json();
       if (response.ok) {
