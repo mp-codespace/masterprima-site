@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://masterprima.site
+
+# Sitemaps
+Sitemap: https://masterprima.site/sitemap.xml
