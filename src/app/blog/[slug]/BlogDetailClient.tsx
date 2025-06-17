@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCreateBlockNote } from "@blocknote/react";
@@ -33,7 +33,6 @@ const slugify = (text: string): string => {
     .replace(/-+$/, ''); // Hapus - dari akhir
 };
 
-
 function UniversalContentView({ content }: { content: string }) {
   let parsed: unknown;
   let isBlockNote = false;
@@ -45,19 +44,19 @@ function UniversalContentView({ content }: { content: string }) {
     isBlockNote = false;
   }
 
-    const editor = useCreateBlockNote({
-  initialContent: isBlockNote && Array.isArray(parsed) ? (parsed as PartialBlock[]) : [],
-  codeBlock: {
-    ...codeBlock,
-    supportedLanguages: {
-      javascript: { name: "JavaScript", aliases: ["js"] },
-      typescript: { name: "TypeScript", aliases: ["ts"] },
-      python: { name: "Python", aliases: ["py"] },
-      html: { name: "HTML" },
-      css: { name: "CSS" },
+  const editor = useCreateBlockNote({
+    initialContent: isBlockNote && Array.isArray(parsed) ? (parsed as PartialBlock[]) : [],
+    codeBlock: {
+      ...codeBlock,
+      supportedLanguages: {
+        javascript: { name: "JavaScript", aliases: ["js"] },
+        typescript: { name: "TypeScript", aliases: ["ts"] },
+        python: { name: "Python", aliases: ["py"] },
+        html: { name: "HTML" },
+        css: { name: "CSS" },
+      },
     },
-  },
-});
+  });
 
   if (isBlockNote && Array.isArray(parsed)) {
     return (
@@ -101,29 +100,27 @@ function parseHeadings(content: string): HeadingItem[] {
   // Helper function to recursively extract text from BlockNote's inline content,
   // handling nested structures like links.
   const getTextFromInlineContent = (items: any[] | undefined): string => {
-      if (!Array.isArray(items)) {
-          return '';
+    if (!Array.isArray(items)) {
+      return '';
+    }
+    return items.map(item => {
+      if (typeof item === 'string') {
+        return item;
       }
-      return items.map(item => {
-          if (typeof item === 'string') {
-              return item;
-          }
-          // If it's a link, recursively get text from its content
-          if (item.type === 'link' && item.content) {
-              return getTextFromInlineContent(item.content);
-          }
-          // Otherwise, it's a text object
-          return item.text || '';
-      }).join('');
+      // If it's a link, recursively get text from its content
+      if (item.type === 'link' && item.content) {
+        return getTextFromInlineContent(item.content);
+      }
+      // Otherwise, it's a text object
+      return item.text || '';
+    }).join('');
   }
-
 
   try {
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) {
       (parsed as PartialBlock[]).forEach((block) => {
         if (block.type === 'heading' && block.props?.level) {
-          
           // Use the robust helper function to extract text
           const text = getTextFromInlineContent(block.content as any[]);
 
@@ -161,52 +158,100 @@ function parseHeadings(content: string): HeadingItem[] {
 // Komponen TableOfContents yang sudah diperbaiki
 function TableOfContents({ content }: { content: string }) {
   const headings = useMemo(() => parseHeadings(content), [content]);
-
-  // useEffect ini sekarang secara andal menemukan elemen judul yang benar dan memberinya ID.
-  useEffect(() => {
-    const articleContent = document.getElementById('main-content');
-    if (!articleContent) return;
-
-    // Ambil semua elemen heading dari dalam container artikel
-    const headingElements = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    const parserHeadingsQueue = [...headings];
-
-    // Cocokkan elemen DOM dengan data heading berdasarkan konten teksnya
-    headingElements.forEach(element => {
-      const elementText = element.textContent?.trim();
-      if (!elementText) return;
-
-      const matchIndex = parserHeadingsQueue.findIndex(h => h.text.trim() === elementText);
-
-      if (matchIndex !== -1) {
-        // Jika cocok, berikan ID dan hapus dari antrian agar tidak ada duplikat
-        element.id = parserHeadingsQueue[matchIndex].id;
-        parserHeadingsQueue.splice(matchIndex, 1);
-      }
-    });
-  }, [headings]); // Dijalankan kembali jika `headings` berubah
-
   const [activeId, setActiveId] = useState('');
+
+  // Function to smoothly scroll to element
+  const scrollToElement = useCallback((id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      // Calculate offset with some padding from top
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - 100; // 100px offset from top
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
+
+  // Set up IDs for headings after content is rendered
   useEffect(() => {
-    const observer = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
+    const timer = setTimeout(() => {
+      const articleContent = document.getElementById('main-content');
+      if (!articleContent) return;
+
+      // Get all heading elements from the article content
+      const headingElements = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      
+      // Create a copy of headings array to track which ones have been matched
+      const remainingHeadings = [...headings];
+
+      // Match DOM elements with parsed headings and assign IDs
+      headingElements.forEach((element) => {
+        const elementText = element.textContent?.trim();
+        if (!elementText) return;
+
+        // Find matching heading from our parsed data
+        const matchIndex = remainingHeadings.findIndex(h => {
+          const normalizedHeadingText = h.text.trim().toLowerCase();
+          const normalizedElementText = elementText.toLowerCase();
+          return normalizedHeadingText === normalizedElementText;
         });
-      },
-      { rootMargin: '-20% 0% -80% 0%' }
-    );
 
-    headings.forEach(({ id }) => {
-      const element = document.getElementById(id);
-      if (element) observer.observe(element);
-    });
+        if (matchIndex !== -1) {
+          // Assign ID and remove from remaining headings to avoid duplicates
+          const heading = remainingHeadings[matchIndex];
+          element.id = heading.id;
+          remainingHeadings.splice(matchIndex, 1);
+        }
+      });
+    }, 100); // Small delay to ensure content is fully rendered
 
-    return () => observer.disconnect();
+    return () => clearTimeout(timer);
   }, [headings]);
 
+  // Set up intersection observer for active heading detection
+  useEffect(() => {
+    if (headings.length === 0) return;
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0% -35% 0%', // Trigger when heading is in the middle area of viewport
+      threshold: 0
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      const visibleHeadings = entries
+        .filter(entry => entry.isIntersecting)
+        .map(entry => entry.target.id)
+        .filter(id => id); // Filter out empty IDs
+
+      if (visibleHeadings.length > 0) {
+        // Set the first visible heading as active
+        setActiveId(visibleHeadings[0]);
+      }
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    // Start observing after a small delay to ensure elements have IDs
+    const timer = setTimeout(() => {
+      headings.forEach(({ id }) => {
+        const element = document.getElementById(id);
+        if (element) {
+          observer.observe(element);
+        }
+      });
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [headings]);
+
+  // Don't render TOC if there are too few headings
   if (headings.length <= 2) return null;
 
   return (
@@ -221,27 +266,21 @@ function TableOfContents({ content }: { content: string }) {
         <nav className="overflow-y-auto max-h-[calc(75vh-48px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
           <div className="space-y-1">
             {headings.map(({ id, text, level }) => (
-              <a
+              <button
                 key={id}
-                href={`#${id}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  const element = document.getElementById(id);
-                  if (element) {
-                    const offsetTop = element.getBoundingClientRect().top + window.scrollY - 100;
-                    window.scrollTo({
-                      top: offsetTop,
-                      behavior: 'smooth'
-                    });
-                  }
+                  scrollToElement(id);
                 }}
-                className={`block py-2.5 px-3 text-sm rounded-lg transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${activeId === id
+                className={`w-full text-left block py-2.5 px-3 text-sm rounded-lg transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  activeId === id
                     ? 'text-blue-700 bg-blue-50 font-medium border-l-4 border-blue-600 shadow-sm'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                  } ${level === 1 ? 'ml-0 font-medium' :
-                    level === 2 ? 'ml-4' :
-                      level === 3 ? 'ml-8' : 'ml-12'
-                  }`}
+                } ${
+                  level === 1 ? 'ml-0 font-medium' :
+                  level === 2 ? 'ml-4' :
+                  level === 3 ? 'ml-8' : 'ml-12'
+                }`}
                 style={{
                   fontSize: level === 1 ? '14px' : level === 2 ? '13px' : '12px',
                   lineHeight: '1.5'
@@ -249,9 +288,9 @@ function TableOfContents({ content }: { content: string }) {
                 aria-label={`Go to section ${text}`}
               >
                 <span className="block truncate">
-                  {text.substring(0, 50)}{text.length > 50 ? '...' : ''}
+                  {text.length > 50 ? `${text.substring(0, 50)}...` : text}
                 </span>
-              </a>
+              </button>
             ))}
           </div>
         </nav>

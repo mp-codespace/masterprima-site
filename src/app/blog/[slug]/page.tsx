@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/blog/[slug]/page.tsx
 
 import { notFound } from "next/navigation";
