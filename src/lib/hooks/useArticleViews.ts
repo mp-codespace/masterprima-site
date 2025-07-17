@@ -1,4 +1,4 @@
-// src\hooks\useArticleViews.ts
+// src\lib\hooks\useArticleViews.ts
 
 import { useEffect, useCallback } from 'react';
 

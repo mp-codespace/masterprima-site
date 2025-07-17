@@ -1,4 +1,4 @@
-// src\components\Testimoni.tsx
+// src/components/Testimoni.tsx
 
 'use client';
 
@@ -17,167 +17,123 @@ interface TestimoniItem {
   verified: boolean;
 }
 
+const defaultTestimoni: TestimoniItem = {
+  id: 1,
+  name: "Masterprima",
+  position: "Admin",
+  rating: 5,
+  review: "Testimoni alumni akan tampil di sini jika sudah diisi admin. Semua testimoni alumni dapat dikelola langsung lewat dashboard.",
+  institution: "Masterprima",
+  year: "2024",
+  verified: true,
+};
+
 const Testimoni: React.FC = () => {
+  const [testimoni, setTestimoni] = useState<TestimoniItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Ambil data dari API baru
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/auth-mp-secure-2024/testimonials');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data: TestimoniItem[] = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setTestimoni(data.map((item, idx) => ({
+            ...defaultTestimoni, // fallback
+            ...item,
+            id: typeof item.id === 'number' ? item.id : idx + 1,
+            name: item.name || 'Alumni',
+            position: item.position || '',
+            rating: typeof item.rating === 'number' ? item.rating : 5,
+            review: item.review || '',
+            institution: item.institution || '',
+            score: item.score || '',
+            year: item.year || '',
+            verified: item.verified ?? true,
+          })));
+        } else {
+          setTestimoni([defaultTestimoni]);
+        }
+      } catch {
+        setTestimoni([defaultTestimoni]);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  // --- Slider state logic ---
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [itemsPerView, setItemsPerView] = useState(3);
 
-  const allTestimoni: TestimoniItem[] = [
-    {
-      id: 1,
-      name: "Kak Medina",
-      position: "Dosen CPNS",
-      rating: 5,
-      review: "Alhamdulillah keterima CPNS dosen. Terima kasih banyak atas bimbingannya kemarin. Bimbingan di Masterprima sangat membantu dalam persiapan CPNS.",
-      institution: "Instansi Pemerintah",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 2,
-      name: "Septi Cahyaning S",
-      position: "Calon ASN",
-      rating: 5,
-      review: "Alhamdulillah lolos SKD CPNS 2024. Terima kasih Masterprima atas bimbingan dan persiapan yang sangat membantu. Mohon doanya untuk tahap selanjutnya.",
-      institution: "CPNS 2024",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 3,
-      name: "Kak Maria",
-      position: "Calon ASN",
-      rating: 5,
-      review: "Pujian Tuhan lulus SKD dengan skor 410. Formasi Pemkot Serang. Terima kasih Masterprima atas bimbingan dan dukungannya selama persiapan CPNS.",
-      institution: "Pemkot Serang",
-      score: "410",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 4,
-      name: "Kak Daffa",
-      position: "Jasa Ahli Pertama",
-      rating: 5,
-      review: "Alhamdulillah lulus SKD dengan skor 345 formasi Kejaksaan. Terima kasih atas bimbingan Masterprima yang sangat membantu dalam persiapan ujian.",
-      institution: "Kejaksaan RI",
-      score: "345",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 5,
-      name: "Mas Abi",
-      position: "ASN 2025",
-      rating: 5,
-      review: "Alhamdulillah lolos CPNS 2024. Terima kasih banyak sudah dibantu persiapan pada saat SKD. Bimbingan Masterprima sangat efektif dan membantu.",
-      institution: "ASN 2025",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 6,
-      name: "Mas Galang",
-      position: "Perencana Ahli Pertama",
-      rating: 5,
-      review: "Alhamdulillah diberikan kesempatan untuk pengisian DRH dengan status P/L di SKB. Terima kasih atas bimbingan dan petunjuk selama ini.",
-      institution: "Dinas PUPR Pemkab Mahakam Ulu",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 7,
-      name: "Mas Dani",
-      position: "Penata Kelola Sistem IT",
-      rating: 5,
-      review: "Alhamdulillah berhasil dengan score SKD 381 untuk formasi penata kelola sistem dan teknologi informasi. Terima kasih bimbingan Masterprima.",
-      institution: "Pemkot Surabaya",
-      score: "381",
-      year: "2024",
-      verified: true
-    },
-    {
-      id: 8,
-      name: "Mbak Medina",
-      position: "Calon ASN Kemendikbud",
-      rating: 5,
-      review: "Alhamdulillah lolos tahap SKD di Kemendikbud dengan nilai 436. Terima kasih banyak atas bimbingan Masterprima. Sukses terus Masterprima!",
-      institution: "Kemendikbud",
-      score: "436",
-      year: "2024",
-      verified: true
-    }
-  ];
-
-  // Update itemsPerView based on screen size
+  // Responsive items per view
   useEffect(() => {
     const updateItemsPerView = () => {
-      if (window.innerWidth < 640) {
-        setItemsPerView(1); // Mobile: 1 item
-      } else if (window.innerWidth < 1024) {
-        setItemsPerView(2); // Tablet: 2 items
-      } else {
-        setItemsPerView(3); // Desktop: 3 items
-      }
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(3);
     };
-
     updateItemsPerView();
     window.addEventListener('resize', updateItemsPerView);
     return () => window.removeEventListener('resize', updateItemsPerView);
   }, []);
 
-  // Calculate max index correctly
-  const maxIndex = Math.max(0, allTestimoni.length - itemsPerView);
+  const maxIndex = Math.max(0, testimoni.length - itemsPerView);
   const totalSlides = maxIndex + 1;
 
   useEffect(() => {
     if (!isAutoPlaying) return;
-
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        if (prev >= maxIndex) {
-          return 0; // Reset to beginning
-        }
-        return prev + 1;
-      });
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, 4000);
-
     return () => clearInterval(interval);
   }, [isAutoPlaying, maxIndex]);
 
   const nextSlide = () => {
     setIsAutoPlaying(false);
     setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-    // Resume auto play after 10 seconds
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const prevSlide = () => {
     setIsAutoPlaying(false);
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
-    // Resume auto play after 10 seconds
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToSlide = (index: number) => {
     setIsAutoPlaying(false);
     setCurrentIndex(index);
-    // Resume auto play after 10 seconds
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
+  const renderStars = (rating: number) => (
+    Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
         className={`w-4 h-4 ${index < rating ? 'text-amber-400 fill-current' : 'text-gray-300'}`}
       />
-    ));
-  };
+    ))
+  );
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
+  const getInitials = (name: string) =>
+    name?.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  // Dummy: jika ingin statistik dari Supabase, fetch manual, atau pakai siteSettings kalau sudah support field statistik
+  const alumniCount = 500;
+  const successRate = 98;
+
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="text-center text-gray-400 text-lg">Memuat Testimoni...</div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8 sm:py-12 lg:py-16 xl:py-20 bg-secondary-sand">
@@ -202,7 +158,6 @@ const Testimoni: React.FC = () => {
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-
           <button
             onClick={nextSlide}
             className="absolute right-0 sm:right-2 lg:right-4 top-1/2 -translate-y-1/2 z-10 bg-primary-red hover:bg-red-700 text-white p-2 sm:p-3 rounded-full shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -219,16 +174,15 @@ const Testimoni: React.FC = () => {
                 transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
               }}
             >
-              {allTestimoni.map((item) => (
-                <div 
-                  key={item.id} 
+              {testimoni.map((item) => (
+                <div
+                  key={item.id}
                   className="flex-shrink-0 px-2 sm:px-3"
                   style={{ width: `${100 / itemsPerView}%` }}
                 >
                   <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
-                    {/* Card Content with proper padding and flex layout */}
                     <div className="p-4 sm:p-5 lg:p-6 flex flex-col h-full">
-                      {/* Header - Fixed height section */}
+                      {/* Header */}
                       <div className="flex items-start space-x-3 mb-4 flex-shrink-0">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-xs sm:text-sm">
@@ -255,21 +209,18 @@ const Testimoni: React.FC = () => {
                           {item.year}
                         </div>
                       </div>
-
-                      {/* Rating - Fixed height section */}
+                      {/* Rating */}
                       <div className="flex items-center space-x-1 mb-4 flex-shrink-0">
                         {renderStars(item.rating)}
                       </div>
-
-                      {/* Review - Flexible height section */}
+                      {/* Review */}
                       <div className="mb-4 flex-grow">
                         <p className="text-neutral-dark-gray text-xs sm:text-sm font-plus-jakarta leading-relaxed italic relative pl-3 border-l-2 sm:border-l-3 border-red-200">
                           {item.review}
                         </p>
                       </div>
-
-                      {/* Score - Fixed height section if exists */}
-                      {item.score && (
+                      {/* Score */}
+                      {item.score && item.score !== "" && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex-shrink-0 mt-auto">
                           <div className="flex items-center justify-between">
                             <span className="text-green-700 font-plus-jakarta text-xs sm:text-sm font-medium">
@@ -310,7 +261,7 @@ const Testimoni: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-2xl w-full">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-5 lg:p-6 border border-red-400 text-center shadow-lg">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-urbanist font-bold text-primary-red mb-2">
-                500+
+                {alumniCount}+
               </div>
               <div className="text-neutral-charcoal text-xs sm:text-sm lg:text-base font-plus-jakarta">
                 Alumni Lulus CPNS
@@ -318,7 +269,7 @@ const Testimoni: React.FC = () => {
             </div>
             <div className="bg-white/90 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-5 lg:p-6 border border-green-400 text-center shadow-lg">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-urbanist font-bold text-green-600 mb-2">
-                98%
+                {successRate}%
               </div>
               <div className="text-neutral-charcoal text-xs sm:text-sm lg:text-base font-plus-jakarta">
                 Tingkat Keberhasilan

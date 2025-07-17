@@ -1,99 +1,67 @@
 // src/app/about/page.tsx
 
-import { Metadata } from 'next';
+'use client';
+
+import useSiteSettings from '@/lib/hooks/useSiteSettings';
 import { MapPin, Phone, Clock, Users, Award, Target } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import StickyBanner from '@/components/StickyBanner';
 
-export const metadata: Metadata = {
-    title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-    description: 'Kenali MasterPrima lebih dekat. Sejak 2009, kami telah berkomitmen mengantarkan siswa Surabaya meraih prestasi terbaik dengan lokasi strategis dan fasilitas modern.',
-    openGraph: {
-        title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-        description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
-        url: '/about',
-    },
-    twitter: {
-        title: 'Tentang MasterPrima - Sejarah & Visi Kami',
-        description: 'Kenali MasterPrima lebih dekat, lembaga bimbingan belajar terpercaya di Surabaya.',
-    },
-    alternates: {
-        canonical: '/about',
-    },
-};
-
-const locations = [
-    {
-        id: 1,
-        name: "Cabang Ini - Gubernur Suryo",
-        address: "Jl. Gubernur Suryo 3 Surabaya (Komplek SMA Trimurti)",
-        phone: "(031) 123-4567",
-        isMain: true,
-        hours: "Senin - Sabtu: 08:00 - 20:00",
-        facilities: ["Ruang AC", "Perpustakaan", "Lab Komputer", "Kantin"]
-    },
-    {
-        id: 2,
-        name: "Cabang Darmo",
-        address: "Jl. Raya Darmo No. 45, Surabaya",
-        phone: "(031) 234-5678",
-        isMain: false,
-        hours: "Senin - Sabtu: 08:00 - 19:00",
-        facilities: ["Ruang AC", "Perpustakaan", "Kantin"]
-    },
-    {
-        id: 3,
-        name: "Cabang Wonokromo",
-        address: "Jl. Wonokromo Indah No. 12, Surabaya",
-        phone: "(031) 345-6789",
-        isMain: false,
-        hours: "Senin - Sabtu: 08:00 - 19:00",
-        facilities: ["Ruang AC", "Perpustakaan"]
-    },
-    {
-        id: 4,
-        name: "Cabang Kenjeran",
-        address: "Jl. Kenjeran Raya No. 88, Surabaya",
-        phone: "(031) 456-7890",
-        isMain: false,
-        hours: "Senin - Sabtu: 08:00 - 19:00",
-        facilities: ["Ruang AC", "Perpustakaan"]
-    },
-    {
-        id: 5,
-        name: "Cabang Rungkut",
-        address: "Jl. Rungkut Industri III No. 15, Surabaya",
-        phone: "(031) 567-8901",
-        isMain: false,
-        hours: "Senin - Sabtu: 08:00 - 19:00",
-        facilities: ["Ruang AC", "Perpustakaan"]
-    }
-];
-
-const stats = [
-    {
-        icon: Users,
-        number: "500+",
-        label: "Siswa Aktif",
-        description: "Siswa yang telah bergabung"
-    },
-    {
-        icon: Award,
-        number: "15+",
-        label: "Tahun Pengalaman",
-        description: "Melayani pendidikan Surabaya"
-    },
-    {
-        icon: Target,
-        number: "98%",
-        label: "Tingkat Kelulusan",
-        description: "Siswa diterima di sekolah favorit"
-    }
-];
-
-
 export default function AboutPage() {
+    const { settings, isLoading } = useSiteSettings();
+    if (isLoading) {
+        return (
+            <main className="min-h-screen bg-neutral-cream flex items-center justify-center">
+                <div className="text-lg text-gray-400 animate-pulse">Loading...</div>
+            </main>
+        );
+    }
+
+    // Fallback
+    const locations = settings?.locations?.length ? settings.locations : [
+        {
+            id: 1,
+            name: "Cabang Ini - Gubernur Suryo",
+            address: "Jl. Gubernur Suryo 3 Surabaya (Komplek SMA Trimurti)",
+            phone: "(031) 123-4567",
+            isMain: true,
+            hours: "Senin - Sabtu: 08:00 - 20:00",
+            facilities: ["Ruang AC", "Perpustakaan", "Lab Komputer", "Kantin"]
+        }
+    ];
+
+    const stats = [
+        {
+            icon: Users,
+            number: settings?.stats_active_students ? `${settings.stats_active_students}+` : "500+",
+            label: "Siswa Aktif",
+            description: "Siswa yang telah bergabung"
+        },
+        {
+            icon: Award,
+            number: settings?.stats_experience_years ? `${settings.stats_experience_years}+` : "15+",
+            label: "Tahun Pengalaman",
+            description: "Melayani pendidikan Surabaya"
+        },
+        {
+            icon: Target,
+            number: settings?.stats_success_rate ? `${settings.stats_success_rate}%` : "98%",
+            label: "Tingkat Kelulusan",
+            description: "Siswa diterima di sekolah favorit"
+        }
+    ];
+
+    const vision = settings?.vision || "Menjadi lembaga bimbingan belajar terdepan di Surabaya yang menghasilkan generasi cerdas, berkarakter, dan berprestasi untuk masa depan Indonesia yang gemilang.";
+
+    const mission = settings?.mission?.length
+        ? settings.mission
+        : [
+            "Memberikan pendidikan berkualitas tinggi dengan metode pembelajaran inovatif",
+            "Mengembangkan potensi akademik dan karakter siswa secara optimal",
+            "Menyediakan fasilitas pembelajaran yang nyaman dan modern"
+        ];
+
     return (
         <main className="min-h-screen bg-neutral-cream">
             <StickyBanner />
@@ -147,8 +115,7 @@ export default function AboutPage() {
                                 Visi Kami
                             </h2>
                             <p className="text-neutral-dark-gray leading-relaxed">
-                                Menjadi lembaga bimbingan belajar terdepan di Surabaya yang menghasilkan
-                                generasi cerdas, berkarakter, dan berprestasi untuk masa depan Indonesia yang gemilang.
+                                {vision}
                             </p>
                         </div>
                         <div className="bg-white rounded-2xl p-8 shadow-sm">
@@ -156,18 +123,12 @@ export default function AboutPage() {
                                 Misi Kami
                             </h2>
                             <ul className="space-y-3 text-neutral-dark-gray">
-                                <li className="flex items-start">
-                                    <div className="w-2 h-2 bg-primary-orange rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                                    Memberikan pendidikan berkualitas tinggi dengan metode pembelajaran inovatif
-                                </li>
-                                <li className="flex items-start">
-                                    <div className="w-2 h-2 bg-primary-orange rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                                    Mengembangkan potensi akademik dan karakter siswa secara optimal
-                                </li>
-                                <li className="flex items-start">
-                                    <div className="w-2 h-2 bg-primary-orange rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                                    Menyediakan fasilitas pembelajaran yang nyaman dan modern
-                                </li>
+                                {mission.map((m, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                        <div className="w-2 h-2 bg-primary-orange rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                        {m}
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                     </div>
@@ -235,7 +196,7 @@ export default function AboutPage() {
                                             Fasilitas:
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
-                                            {location.facilities.map((facility, index) => (
+                                            {location.facilities?.map((facility: string, index: number) => (
                                                 <span
                                                     key={index}
                                                     className="inline-block bg-secondary-sand text-primary-orange px-2 py-1 rounded-md text-xs font-medium"

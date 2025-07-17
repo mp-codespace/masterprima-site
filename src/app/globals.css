@@ -5,6 +5,9 @@
 @tailwind utilities;
 
 :root {
+  --font-urbanist: Urbanist, sans-serif;
+  --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+
   /* Light Mode Colors */
   --color-body: #333333;
   --color-muted: #6B7280;

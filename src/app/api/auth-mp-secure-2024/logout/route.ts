@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
         await supabaseAdmin.from('admin_activity_log').insert({
           admin_id: user.id,
           action_type: 'LOGOUT',
-          // --- vvv THIS LINE IS NOW FIXED vvv ---
           ip_address: clientIP
         })
       }

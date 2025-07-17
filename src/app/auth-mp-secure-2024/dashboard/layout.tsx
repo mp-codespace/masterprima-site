@@ -8,12 +8,15 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Newspaper,
-  // Users,
-  // Shield,
+  Users,
+  Shield,
   DollarSign,
   LogOut,
   Menu,
   ChevronDown,
+  Info,
+  MessageCircle,
+  BookOpen,
 } from 'lucide-react';
 
 interface NavItem {
@@ -25,13 +28,16 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { href: '/auth-mp-secure-2024/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/auth-mp-secure-2024/dashboard/articles', label: 'Articles', icon: Newspaper },
-  // { href: '/auth-mp-secure-2024/dashboard/team', label: 'Team Members', icon: Users },
+  { href: '/auth-mp-secure-2024/dashboard/team', label: 'Team Members', icon: Users },
   { href: '/auth-mp-secure-2024/dashboard/pricing', label: 'Pricing Plans', icon: DollarSign },
+  { href: '/auth-mp-secure-2024/dashboard/about', label: 'About', icon: Info },
+  { href: '/auth-mp-secure-2024/dashboard/testimoni', label: 'Testimoni', icon: MessageCircle },
+  { href: '/auth-mp-secure-2024/dashboard/faq', label: 'FAQ', icon: BookOpen }, 
 ];
 
-// const settingsNavItems: NavItem[] = [
-//   { href: '/auth-mp-secure-2024/dashboard/users', label: 'Users & Roles', icon: Shield },
-// ];
+const settingsNavItems: NavItem[] = [
+  { href: '/auth-mp-secure-2024/dashboard/users', label: 'Users & Roles', icon: Shield },
+];
 
 const NavLink = ({ item }: { item: NavItem }) => {
   const pathname = usePathname();
@@ -97,10 +103,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         <nav className="flex-1 p-3 space-y-1.5">
             {mainNavItems.map((item) => <NavLink key={item.href} item={item} />)}
-            {/* <div className="pt-4 mt-2">
+            <div className="pt-4 mt-2">
                 <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Settings</p>
                 {settingsNavItems.map((item) => <NavLink key={item.href} item={item} />)}
-            </div> */}
+            </div>
         </nav>
     </div>
   );

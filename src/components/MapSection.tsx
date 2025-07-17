@@ -1,26 +1,38 @@
-// src\components\MapSection.tsx
+// src/components/MapSection.tsx
 
 'use client';
 
 import React, { useState } from 'react';
 import { MapPin, Navigation, Phone, Clock, Mail, ExternalLink, Car, Bus, Train } from 'lucide-react';
+import useSiteSettings from '@/lib/hooks/useSiteSettings';
 
 interface MapSectionProps {
   className?: string;
 }
 
 const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
+  const { settings } = useSiteSettings();
   const [activeTab, setActiveTab] = useState<'map' | 'directions' | 'contact'>('map');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Location data
-  const locationData = {
-    name: "MASTERPRIMA - SURABAYA",
-    address: "Jl. Gubernur Suryo 3 Surabaya (Komplek SMA Trimurti)",
-    phone: "+62 856-4687-7888",
-    email: "masterprimasurabaya@gmail.com",
-    hours: "Senin - Jumat: 09:00 - 17:00"
-  };
+  // Ambil hanya cabang utama atau default
+  const locations = settings?.locations && settings.locations.length > 0
+    ? settings.locations
+    : [
+        {
+          id: 1,
+          name: "MASTERPRIMA - SURABAYA",
+          address: "Jl. Gubernur Suryo 3 Surabaya (Komplek SMA Trimurti)",
+          phone: "+62 856-4687-7888",
+          hours: "Senin - Jumat: 09:00 - 17:00",
+          facilities: ["Komplek SMA Trimurti"],
+          area: "Pusat Kota",
+          isMain: true,
+        }
+      ];
+
+  // Langsung pilih cabang utama/pertama (tanpa tombol switch)
+  const locationData = locations.find(l => l.isMain) || locations[0];
 
   const nearbyPlaces = [
     { name: "BG Junction Mall", type: "Shopping", distance: "0.5 km" },
@@ -39,7 +51,7 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
   const handleGetDirections = () => {
     setIsLoading(true);
     setTimeout(() => {
-      const googleMapsUrl = 'https://maps.app.goo.gl/DGw5Kpmu7vUxJJxTA';
+      const googleMapsUrl = locationData.mapsUrl || 'https://maps.app.goo.gl/DGw5Kpmu7vUxJJxTA';
       window.open(googleMapsUrl, '_blank');
       setIsLoading(false);
     }, 1000);
@@ -68,6 +80,8 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
           </p>
         </div>
 
+        {/* Tidak ada tombol switch cabang */}
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Map Container */}
           <div className="lg:col-span-2">
@@ -94,20 +108,20 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
               <div className="p-6">
                 {activeTab === 'map' && (
                   <div className="space-y-6">
-                    {/* Real Google Maps Embed */}
+                    {/* Google Maps Embed */}
                     <div className="relative rounded-xl overflow-hidden h-80 sm:h-96 shadow-lg">
                       <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.4831842467!2d112.74950931477!3d-7.257472994757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7f96ec1b5b729%3A0x8c8a8f1b2b2b2b2b!2sJl.%20Gubernur%20Suryo%20No.3%2C%20Embong%20Kaliasin%2C%20Kec.%20Genteng%2C%20Surabaya%2C%20Jawa%20Timur!5e0!3m2!1sid!2sid!4v1640000000000!5m2!1sid!2sid"
+                        src={locationData.mapsEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.4831842467!2d112.74950931477!3d-7.257472994757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7f96ec1b5b729%3A0x8c8a8f1b2b2b2b2b!2sJl.%20Gubernur%20Suryo%20No.3%2C%20Embong%20Kaliasin%2C%20Kec.%20Genteng%2C%20Surabaya%2C%20Jawa%20Timur!5e0!3m2!1sid!2sid!4v1640000000000!5m2!1sid!2sid"}
                         width="100%"
                         height="100%"
                         style={{ border: 0 }}
                         allowFullScreen
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title="Lokasi MasterPrima Surabaya"
+                        title={`Lokasi ${locationData.name}`}
                         className="w-full h-full"
                       />
-                      
+
                       {/* Overlay Controls */}
                       <div className="absolute top-4 right-4 z-10">
                         <button
@@ -153,7 +167,7 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
                           Lokasi Spesifik
                         </h4>
                         <p className="text-purple-700 text-sm">
-                          Komplek SMA Trimurti
+                          {locationData.facilities?.join(', ') || 'Fasilitas lengkap'}
                         </p>
                         <p className="text-purple-600 text-xs mt-1">
                           Area pendidikan & bisnis
@@ -165,7 +179,7 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
                           Area
                         </h4>
                         <p className="text-green-700 text-sm">
-                          Pusat Kota Surabaya
+                          {locationData.area || 'Pusat Kota'}
                         </p>
                         <p className="text-green-600 text-xs mt-1">
                           Zona strategis bisnis
@@ -202,7 +216,6 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
                         </div>
                       ))}
                     </div>
-                    
                     <div className="bg-red-50 rounded-lg p-4">
                       <h4 className="font-semibold text-red-800 mb-2">Tips Perjalanan</h4>
                       <ul className="text-red-700 text-sm space-y-1">
@@ -229,7 +242,7 @@ const MapSection: React.FC<MapSectionProps> = ({ className = '' }) => {
                         <Mail className="w-5 h-5 text-red-600" />
                         <div>
                           <p className="font-semibold text-gray-800">Email</p>
-                          <p className="text-gray-600">{locationData.email}</p>
+                          <p className="text-gray-600">{settings?.contact_email || '-'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">

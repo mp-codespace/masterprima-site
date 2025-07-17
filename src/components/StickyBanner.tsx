@@ -1,9 +1,8 @@
-// src/components/StickyBanner.tsx
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, Clock, Users, Sparkles } from 'lucide-react';
+import useSiteSettings from '@/lib/hooks/useSiteSettings'; // pastikan path sudah benar
 
 interface StickyBannerProps {
   className?: string;
@@ -14,17 +13,16 @@ interface StickyBannerProps {
 
 type CountdownKey = 'days' | 'hours' | 'minutes' | 'seconds';
 
-// This function calculates the deadline based on the current time.
 const calculateDeadline = (): Date => {
   const now = new Date();
-  now.setHours(0, 0, 0, 0); // set to the beginning of the day
-  const deadline = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // add 30 days
+  now.setHours(0, 0, 0, 0);
+  const deadline = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 hari
   return deadline;
 };
 
 const StickyBanner: React.FC<StickyBannerProps> = ({
   className = '',
-  autoCloseAfter = 3, 
+  autoCloseAfter = 3,
   showCountdown = true,
   showAutoCloseProgress = true
 }) => {
@@ -38,21 +36,17 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
   });
   const [autoCloseProgress, setAutoCloseProgress] = useState(100);
   const [isHovered, setIsHovered] = useState(false);
-
-  // Use a 'mounted' state to prevent rendering dynamic content on the server.
   const [mounted, setMounted] = useState(false);
 
-  // This useEffect hook handles all client-side logic.
-  useEffect(() => {
-    // Mark the component as mounted on the client.
-    setMounted(true);
+  // AMBIL DATA DARI ADMIN DASHBOARD (Supabase)
+  const { settings } = useSiteSettings();
 
-    // Safely calculate the deadline and start the countdown interval.
+  useEffect(() => {
+    setMounted(true);
     const deadline = calculateDeadline();
     const countdownTimer = setInterval(() => {
       const now = new Date();
       const distance = deadline.getTime() - now.getTime();
-
       if (distance > 0) {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -66,12 +60,10 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
       }
     }, 1000);
 
-    // Set up the auto-close functionality
     let closeTimer: NodeJS.Timeout | null = null;
     let progressInterval: NodeJS.Timeout | null = null;
 
     if (autoCloseAfter > 0) {
-      // Update progress bar every 100ms for smooth animation
       const progressUpdateInterval = 100;
       const totalUpdates = (autoCloseAfter * 1000) / progressUpdateInterval;
       let currentUpdate = 0;
@@ -81,7 +73,6 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
           currentUpdate++;
           const progress = Math.max(0, 100 - (currentUpdate / totalUpdates) * 100);
           setAutoCloseProgress(progress);
-
           if (progress <= 0) {
             clearInterval(progressInterval!);
             handleClose();
@@ -89,7 +80,6 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
         }
       }, progressUpdateInterval);
 
-      // Backup timer to ensure banner closes even if progress updates fail
       closeTimer = setTimeout(() => {
         if (!isHovered) {
           handleClose();
@@ -97,15 +87,14 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
       }, autoCloseAfter * 1000);
     }
 
-    // Cleanup function to clear intervals and timers when the component unmounts.
     return () => {
       clearInterval(countdownTimer);
       if (closeTimer) clearTimeout(closeTimer);
       if (progressInterval) clearInterval(progressInterval);
     };
+    // eslint-disable-next-line
   }, [autoCloseAfter, isHovered]);
 
-  // Reset auto-close progress when hover state changes
   useEffect(() => {
     if (isHovered && autoCloseAfter > 0) {
       setAutoCloseProgress(100);
@@ -117,35 +106,28 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
     setTimeout(() => setIsVisible(false), 300);
   };
 
+  // Ambil link WA dari settings. fallback default jika belum ada
+  const waNumber = settings?.contact_whatsapp?.replace(/\D/g, '') || '6281234567890';
+  const waLink = `https://wa.me/${waNumber}`;
+
   const handleCTA = () => {
-    window.open('https://heylink.me/masterprimasby', '_blank');
+    window.open(waLink, '_blank');
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  // Render nothing on the server or during the initial client render.
-  if (!mounted || !isVisible) {
-    return null;
-  }
+  if (!mounted || !isVisible) return null;
 
   const countdownKeys: CountdownKey[] = ['days', 'hours', 'minutes', 'seconds'];
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-[999] transform transition-all duration-300 ease-in-out ${
-        isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
-      } ${className}`}
+      className={`fixed top-0 left-0 right-0 z-[999] transform transition-all duration-300 ease-in-out ${isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'} ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 shadow-lg relative overflow-hidden">
-        {/* Auto-close progress bar */}
         {showAutoCloseProgress && autoCloseAfter > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/20">
             <div
@@ -154,7 +136,7 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
             />
           </div>
         )}
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2.5">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -174,8 +156,6 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
                   </div>
                 </div>
               </div>
-              
-              {/* Countdown display */}
               {showCountdown && (
                 <div className="hidden lg:flex items-center space-x-2 bg-white/10 rounded-md px-3 py-1.5 backdrop-blur-sm">
                   <Clock className="w-4 h-4 text-yellow-300" />
@@ -197,16 +177,15 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-2 ml-3">
-              {/* Auto-close indicator */}
               {autoCloseAfter > 0 && isHovered && (
                 <div className="hidden sm:flex items-center space-x-1 text-white/80 text-xs">
                   <Clock className="w-3 h-3" />
                   <span>Hover to pause</span>
                 </div>
               )}
-              
+
               <button
                 onClick={handleCTA}
                 className="bg-white text-red-600 hover:bg-yellow-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm font-plus-jakarta transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center space-x-1 group whitespace-nowrap"
@@ -214,7 +193,7 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
                 <span>Daftar Sekarang</span>
                 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
-              
+
               <button
                 onClick={handleClose}
                 className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-full transition-all duration-200 flex-shrink-0"
@@ -225,8 +204,6 @@ const StickyBanner: React.FC<StickyBannerProps> = ({
             </div>
           </div>
         </div>
-        
-        {/* Bottom gradient line */}
         <div className="h-0.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-60"></div>
       </div>
     </div>

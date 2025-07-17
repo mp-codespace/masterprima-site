@@ -203,6 +203,17 @@ export default function PricingPage() {
     setLoading(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading Price...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">Manage Pricing Plans</h1>
