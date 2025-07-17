@@ -1,1 +1,0 @@
-// src\app\api\public\about\route.ts
