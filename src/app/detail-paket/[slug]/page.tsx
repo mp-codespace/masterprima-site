@@ -1,12 +1,12 @@
 // src/app/detail-paket/[slug]/page.tsx
 
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import LihatDetailPaket from '@/components/LihatDetailPaket';
 
-// Hardcoded data untuk program section (fallback)
+// Hardcoded fallback program data
 const hardcodedPrograms = [
   {
     id: 1,
@@ -92,23 +92,14 @@ const hardcodedPrograms = [
 
 async function getProgramData(slug: string) {
   try {
-    // Cek apakah slug untuk program hardcoded
     if (slug.startsWith('program-')) {
       const programId = parseInt(slug.replace('program-', ''));
       const program = hardcodedPrograms.find(p => p.id === programId);
       return program ? { type: 'program', data: program } : null;
     }
-
-    // Cek database untuk plan
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/public/pricing/${slug}`, { 
-      cache: 'no-store' 
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
+    const response = await fetch(`${baseUrl}/api/public/pricing/${slug}`, { cache: 'no-store' });
+    if (!response.ok) return null;
     const plan = await response.json();
     return { type: 'plan', data: plan };
   } catch (error) {
@@ -117,20 +108,19 @@ async function getProgramData(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: { params: { slug: string } }
+): Promise<Metadata> {
   const result = await getProgramData(params.slug);
-  
   if (!result) {
     return {
       title: 'Paket Tidak Ditemukan - Master Prima',
       description: 'Paket yang Anda cari tidak tersedia.',
     };
   }
-
   const { data } = result;
   const title = `${data.name} - Master Prima`;
   const description = data.description || `Detail lengkap paket ${data.name} di Master Prima. Fasilitas lengkap dengan harga terjangkau.`;
-
   return {
     title,
     description,
@@ -149,7 +139,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function DetailPaketPage({ params }: { params: { slug: string } }) {
+export default async function Page({
+  params
+}: {
+  params: { slug: string }
+}) {
   const result = await getProgramData(params.slug);
 
   if (!result) {
@@ -161,14 +155,12 @@ export default async function DetailPaketPage({ params }: { params: { slug: stri
   return (
     <main className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
       <Navbar />
-      
       <div className="pt-20">
         <LihatDetailPaket 
-          data={data} 
-          type={type as 'program' | 'plan'} 
+          data={data}
+          type={type as 'program' | 'plan'}
         />
       </div>
-      
       <Footer />
     </main>
   );
