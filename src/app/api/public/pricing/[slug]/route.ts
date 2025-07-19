@@ -1,21 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/public/pricing/[slug]/route.ts
 
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-// import { Database } from '@/lib/supabase/types';
 
-// type PricingPlan = Database['public']['Tables']['pricing_plans']['Row'];
+// Helper to get slug from the URL
+function getSlug(request: NextRequest) {
+  const pathname = new URL(request.url).pathname;
+  // Adjust the split index if the route is nested deeper
+  const parts = pathname.split('/');
+  return parts[parts.length - 1] || parts[parts.length - 2]; // fallback for trailing slash
+}
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { slug } = params;
-    
-    // Cari plan berdasarkan plan_id dan pastikan aktif
+    const slug = getSlug(request);
+
+    if (!slug) {
+      return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
+    }
+
     const { data: plan, error } = await supabaseAdmin
       .from('pricing_plans')
       .select('*')
@@ -23,25 +27,14 @@ export async function GET(
       .eq('is_active', true)
       .single();
 
-    if (error) {
-      console.error('Supabase error:', error);
+    if (error || !plan) {
       return NextResponse.json(
         { error: 'Plan not found' },
         { status: 404 }
       );
     }
 
-    if (!plan) {
-      return NextResponse.json(
-        { error: 'Plan not found' },
-        { status: 404 }
-      );
-    }
-
-    // Parse features jika ada (stored as JSON)
     const features = plan.features as Record<string, any> || {};
-    
-    // Format response sesuai dengan struktur yang diharapkan
     const response = {
       plan_id: plan.plan_id,
       name: plan.name,
@@ -74,16 +67,15 @@ export async function GET(
   }
 }
 
-// Optional: Tambahkan method untuk update plan jika diperlukan
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { slug } = params;
+    const slug = getSlug(request);
+
+    if (!slug) {
+      return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
+    }
+
     const body = await request.json();
-    
-    // Update plan
     const { data: updatedPlan, error } = await supabaseAdmin
       .from('pricing_plans')
       .update({
@@ -100,7 +92,6 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Supabase update error:', error);
       return NextResponse.json(
         { error: 'Failed to update plan' },
         { status: 400 }
