@@ -6,12 +6,6 @@ import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import LihatDetailPaket from '@/components/LihatDetailPaket';
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
-
 // Hardcoded data untuk program section (fallback)
 const hardcodedPrograms = [
   {
@@ -123,7 +117,7 @@ async function getProgramData(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const result = await getProgramData(params.slug);
   
   if (!result) {
@@ -155,7 +149,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function DetailPaketPage({ params }: PageProps) {
+export default async function DetailPaketPage({ params }: { params: { slug: string } }) {
   const result = await getProgramData(params.slug);
 
   if (!result) {
