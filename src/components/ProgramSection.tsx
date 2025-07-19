@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import useSiteSettings from '@/lib/hooks/useSiteSettings';
+import LihatDetailPaketButton from './LihatDetailPaketButton';
 
 interface ProgramCard {
   id: number;
@@ -245,9 +246,11 @@ Terima kasih!`;
                     </button>
 
                     {program.detailsAvailable && (
-                      <button className="w-full py-3 px-4 rounded-xl border-2 border-neutral-dark-gray text-neutral-dark-gray hover:bg-neutral-dark-gray hover:text-white transition-all duration-200 font-medium">
-                        Lihat Detail Paket
-                      </button>
+                      <LihatDetailPaketButton 
+                        programId={program.id}
+                        isPopular={program.isPopular}
+                        className=""
+                      />
                     )}
                   </div>
 

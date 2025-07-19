@@ -1,3 +1,5 @@
+// src\app\auth-mp-secure-2024\dashboard\articles\[id]\edit\page.tsx
+
 'use client'
 
 import { useState, useEffect, useCallback, FormEvent, useRef, ChangeEvent } from 'react';

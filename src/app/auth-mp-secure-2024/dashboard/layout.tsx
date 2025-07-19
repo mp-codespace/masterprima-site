@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Newspaper,
-  Users,
+  // Users,
   Shield,
   DollarSign,
   LogOut,
@@ -28,7 +28,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { href: '/auth-mp-secure-2024/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/auth-mp-secure-2024/dashboard/articles', label: 'Articles', icon: Newspaper },
-  { href: '/auth-mp-secure-2024/dashboard/team', label: 'Team Members', icon: Users },
+  // { href: '/auth-mp-secure-2024/dashboard/team', label: 'Team Members', icon: Users },
   { href: '/auth-mp-secure-2024/dashboard/pricing', label: 'Pricing Plans', icon: DollarSign },
   { href: '/auth-mp-secure-2024/dashboard/about', label: 'About', icon: Info },
   { href: '/auth-mp-secure-2024/dashboard/testimoni', label: 'Testimoni', icon: MessageCircle },

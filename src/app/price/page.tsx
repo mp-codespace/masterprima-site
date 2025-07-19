@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import StickyBanner from '@/components/StickyBanner';
 import { Check, Star, Crown, Award } from 'lucide-react';
+import LihatDetailPaketButton from '@/components/LihatDetailPaketButton'; 
 
 export const metadata: Metadata = {
   title: 'Harga & Paket Bimbel MasterPrima',
@@ -193,13 +194,7 @@ export default async function PricePage() {
                             </div>
                           ))}
                         </div>
-                        <button className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 ${
-                          pkg.popular
-                            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl'
-                            : 'bg-gray-900 text-white hover:bg-gray-800'
-                        }`}>
-                          Pilih Paket Ini
-                        </button>
+                        <LihatDetailPaketButton planId={pkg.plan_id} isPopular={pkg.popular} />
                       </div>
                     </div>
                   ))}
