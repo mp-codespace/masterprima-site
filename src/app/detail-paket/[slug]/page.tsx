@@ -109,9 +109,10 @@ async function getProgramData(slug: string) {
 }
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
-  const result = await getProgramData(params.slug);
+  const { slug } = await params;
+  const result = await getProgramData(slug);
   if (!result) {
     return {
       title: 'Paket Tidak Ditemukan - Master Prima',
@@ -127,14 +128,14 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: `/detail-paket/${params.slug}`,
+      url: `/detail-paket/${slug}`,
     },
     twitter: {
       title,
       description,
     },
     alternates: {
-      canonical: `/detail-paket/${params.slug}`,
+      canonical: `/detail-paket/${slug}`,
     },
   };
 }
@@ -142,9 +143,10 @@ export async function generateMetadata(
 export default async function Page({
   params
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const result = await getProgramData(params.slug);
+  const { slug } = await params;
+  const result = await getProgramData(slug);
 
   if (!result) {
     notFound();
