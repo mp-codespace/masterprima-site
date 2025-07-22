@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import StickyBanner from '@/components/StickyBanner';
 import { Check, Star, Crown, Award } from 'lucide-react';
-import LihatDetailPaketButton from '@/components/LihatDetailPaketButton'; 
+import LihatDetailPaketButton from '@/components/LihatDetailPaketButton';
 
 export const metadata: Metadata = {
   title: 'Harga & Paket Bimbel MasterPrima',
@@ -98,7 +98,7 @@ export default async function PricePage() {
     .filter(Boolean) as Category[];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+    <main className="min-h-screen bg-neutral-cream">
       <StickyBanner />
       <Navbar />
 
@@ -138,11 +138,10 @@ export default async function PricePage() {
                   {plans.filter((p: Plan) => p.category_id === category.category_id).map((pkg: Plan) => (
                     <div
                       key={pkg.plan_id}
-                      className={`relative bg-white rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-                        pkg.popular
-                          ? 'border-orange-200 shadow-lg ring-4 ring-orange-100'
-                          : 'border-gray-100 hover:border-orange-100'
-                      }`}
+                      className={`relative bg-white rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${pkg.popular
+                        ? 'border-orange-200 shadow-lg ring-4 ring-orange-100'
+                        : 'border-gray-100 hover:border-orange-100'
+                        }`}
                     >
                       {pkg.popular && (
                         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -153,11 +152,10 @@ export default async function PricePage() {
                       )}
                       <div className="p-8">
                         <div className="text-center mb-8">
-                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
-                            pkg.popular
-                              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
+                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${pkg.popular
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                            : 'bg-gray-100 text-gray-600'
+                            }`}>
                             {getIcon(pkg.icon)}
                           </div>
                           <h3 className="text-xl font-semibold text-neutral-900 mb-2">
@@ -205,7 +203,7 @@ export default async function PricePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-r from-orange-50 to-red-50">
+      <section className="py-20 bg-secondary-sand">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-6">
             Fasilitas Eksklusif di Setiap Paket
@@ -228,32 +226,32 @@ export default async function PricePage() {
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-12 text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+      <section className="py-12 md:py-16 pb-0">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-8 md:p-10 text-white">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-5">
               Masih Bingung Pilih Paket yang Tepat?
             </h2>
-            <p className="text-lg mb-8 opacity-90">
+            <p className="text-base md:text-lg mb-6 opacity-90">
               Konsultasi gratis dengan tim ahli kami untuk mendapatkan rekomendasi paket terbaik sesuai kebutuhanmu
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <a
                 href="https://wa.me/6281232420044"
-                className="inline-flex items-center gap-3 bg-white text-orange-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm md:text-base"
               >
                 WhatsApp Admin 1
               </a>
               <a
                 href="https://wa.me/6285646877888"
-                className="inline-flex items-center gap-3 bg-white text-orange-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm md:text-base"
               >
                 WhatsApp Admin 2
               </a>
             </div>
-            <div className="mt-8 pt-8 border-t border-white/20">
+            <div className="mt-6 pt-6 border-t border-white/20">
               <div className="flex items-center justify-center gap-2 text-white/80">
-                <span className="text-sm">
+                <span className="text-xs md:text-sm">
                   Jl. Gubernur Suryo No. 3 (Komplek SMA Trimurti Surabaya)
                 </span>
               </div>
@@ -262,7 +260,9 @@ export default async function PricePage() {
         </div>
       </section>
 
-      <Footer />
+      <div className="mt-0">
+        <Footer />
+      </div>
     </main>
   );
 }

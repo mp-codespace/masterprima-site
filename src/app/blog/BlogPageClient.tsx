@@ -249,8 +249,6 @@ export default function BlogPageClient() {
         setSort('date');
     };
 
-    // Generate structured data when articles are loaded
-    // FIX: tags removed from generateStructuredData call
     const structuredData = useMemo(() => {
         if (articles.length > 0) {
             return generateStructuredData(articles);
@@ -395,9 +393,6 @@ export default function BlogPageClient() {
                                             Clear filters
                                         </button>
                                     )}
-                                </div>
-                                <div className="text-sm text-gray-500" role="status" aria-live="polite">
-                                    {isLoading ? 'Memuat artikel...' : `${filteredArticles.length} artikel ditemukan`}
                                 </div>
                             </div>
 

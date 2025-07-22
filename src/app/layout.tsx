@@ -24,11 +24,9 @@ export const metadata: Metadata = defaultMetadata;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
-      {/* NOTE: suppressHydrationWarning sebaiknya di body, bukan di html */}
+    <html lang="id" suppressHydrationWarning>
       <body
         className={`${urbanist.variable} ${plusJakartaSans.variable} font-plus-jakarta antialiased`}
-        suppressHydrationWarning
       >
         {children}
       </body>

@@ -12,7 +12,7 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import Image from "next/image";
-import { supabase } from '@/lib/supabase/client'; // <--- Make sure this path is correct
+import { supabase } from '@/lib/supabase/client'; 
 
 interface ArticleData {
   title: string;
