@@ -135,7 +135,7 @@ Terima kasih!`;
   };
 
   const handleConsultationClick = () => {
-    window.open(waLink("Halo, saya ingin konsultasi memilih paket terbaik di Master Prima."), '_blank');
+    window.open('https://heylink.me/masterprimasby', '_blank');
   };
 
   const toggleExpanded = (cardId: number) => {
