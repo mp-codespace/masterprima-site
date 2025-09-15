@@ -1,7 +1,7 @@
-// src/utils/supabase/server.ts
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { Database } from "@/lib/supabase/types";
 
 /**
  * Guard required env vars early with readable errors.
@@ -21,13 +21,15 @@ function requireEnv(name: string): string {
  * Create a Supabase client bound to the current request's cookies.
  * Next.js 15: cookies() is async, so this function is async too.
  */
-export async function createClient(): Promise<SupabaseClient> {
+// 2. Updated the function's return type
+export async function createClient(): Promise<SupabaseClient<Database>> {
   const cookieStore = await cookies();
 
   const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
   const anonKey = requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-  return createServerClient(url, anonKey, {
+  // 3. Provided the <Database> type when creating the client
+  return createServerClient<Database>(url, anonKey, {
     cookies: {
       get(name: string) {
         // Safe in RSC and Server Actions
@@ -55,6 +57,7 @@ export async function createClient(): Promise<SupabaseClient> {
 
 /**
  * Optional alias so callers can import with a more explicit name:
- *   import { createServerSupabaseClient } from "@/utils/supabase/server";
+ * import { createServerSupabaseClient } from "@/utils/supabase/server";
  */
 export const createServerSupabaseClient = createClient;
+
