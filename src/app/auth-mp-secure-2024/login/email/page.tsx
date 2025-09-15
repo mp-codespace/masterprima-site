@@ -1,4 +1,3 @@
-// src/app/auth-mp-secure-2024/login/email/page.tsx
 "use client";
 
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
@@ -43,7 +42,7 @@ const CompanyLogo = () => (
   </svg>
 );
 
-export default function EmailLoginPage() {
+export default function EmailLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -242,3 +241,4 @@ export default function EmailLoginPage() {
     </main>
   );
 }
+
