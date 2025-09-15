@@ -1,119 +1,150 @@
-// File path: src/app/api/auth-mp-secure-2024/login/route.ts
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/app/api/auth-mp-secure-2024/login/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { verifyPassword, createSessionPayload } from "@/lib/auth/utils";
 
-// Helper function to get client IP
-function getClientIP(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const realIP = request.headers.get("x-real-ip");
-  const cfConnectingIP = request.headers.get("cf-connecting-ip");
+// ------------ rate limit -------------
+const rlStore = new Map<string, { count: number; reset: number }>();
+function rateLimit(ip: string, max = 10, win = 15 * 60 * 1000) {
+  const now = Date.now();
+  const cur = rlStore.get(ip);
+  if (!cur || now > cur.reset) {
+    rlStore.set(ip, { count: 1, reset: now + win });
+    return { ok: true, rem: max - 1 };
+  }
+  if (cur.count >= max) return { ok: false, rem: 0 };
+  cur.count++;
+  return { ok: true, rem: max - cur.count };
+}
+const getIp = (req: NextRequest) =>
+  req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  req.headers.get("x-real-ip") ||
+  "unknown";
 
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  if (realIP) return realIP;
-  if (cfConnectingIP) return cfConnectingIP;
+// ------------ validation -------------
+const schema = z.object({
+  username: z.string().min(1, "Username or email is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
-  return "unknown";
+const json = (b: unknown, s = 200, h?: Record<string, string>) => {
+  const res = NextResponse.json(b, { status: s, headers: h });
+  res.headers.set("Cache-Control", "no-store, max-age=0");
+  res.headers.set("Pragma", "no-cache");
+  res.headers.set("Expires", "0");
+  return res;
+};
+
+// ------------ activity log (safe) -------------
+async function logActivity(data: any) {
+  try {
+    await supabaseAdmin.from("admin_activity_log").insert({
+      admin_id: data.admin_id ?? null,
+      action_type: data.action_type,
+      table_name: data.table_name ?? "admin",
+      record_id: data.record_id ?? null,
+      changes: data.changes ?? {},
+      ip_address: data.ip_address ?? "unknown",
+    });
+  } catch (e) {
+    console.warn("logActivity (non-critical):", e);
+  }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await request.json();
+    const ip = getIp(req);
+    const rl = rateLimit(ip);
+    if (!rl.ok) return json({ error: "Too many login attempts." }, 429, { "Retry-After": "900" });
 
-    // === DEBUG LOG: Input
-    console.log("\n[LOGIN DEBUG] =========");
-    console.log("Username:", username);
-    console.log("Password (plain):", password);
-
-    if (!username || !password) {
-      console.log("Missing username or password");
-      return NextResponse.json(
-        { error: "Username and password are required" },
-        { status: 400 }
-      );
+    const parsed = schema.safeParse(await req.json());
+    if (!parsed.success) {
+      return json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400);
     }
+    const identifier = parsed.data.username.trim().toLowerCase();
+    const password = parsed.data.password;
 
-    const { data: user, error } = await supabaseAdmin
+    // Find admin by email or username
+    const base = supabaseAdmin
       .from("admin")
-      .select("*")
-      .eq("username", username)
-      .single();
+      .select("id, username, email, password, is_admin, created_at, updated_at")
+      .limit(1);
 
-    // === DEBUG LOG: Supabase Query
-    console.log("Supabase user:", user);
-    console.log("Supabase error:", error);
+    const { data, error } = identifier.includes("@")
+      ? await base.ilike("email", identifier)
+      : await base.ilike("username", identifier);
 
-    if (error || !user) {
-      console.log("User not found or query error");
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+    const admin = data?.[0];
+    if (error || !admin || !admin.password) {
+      await logActivity({
+        admin_id: null,
+        action_type: "LOGIN_FAILED",
+        changes: { reason: "user_not_found", identifier, ts: new Date().toISOString() },
+        ip_address: ip,
+      });
+      return json({ error: "Invalid username/email or password." }, 401, {
+        "X-RateLimit-Remaining": String(rl.rem),
+      });
     }
 
-    // === DEBUG LOG: Password in DB
-    console.log("Password in DB:", user.password);
-
-    const isValidPassword = verifyPassword(password, user.password);
-
-    // === DEBUG LOG: Password Verification
-    console.log("verifyPassword result:", isValidPassword);
-
-    if (!isValidPassword) {
-      console.log("Password mismatch");
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+    if (!admin.is_admin) {
+      return json({ error: "Access denied." }, 403, { "X-RateLimit-Remaining": String(rl.rem) });
     }
 
-    const sessionToken = createSessionPayload({
-      id: user.id,
-      username: user.username,
-      is_admin: user.is_admin,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
+    const ok = verifyPassword(password, admin.password); // bcrypt compare
+    if (!ok) {
+      await logActivity({
+        admin_id: admin.id,
+        action_type: "LOGIN_FAILED",
+        record_id: admin.id,
+        changes: { reason: "invalid_password", identifier, ts: new Date().toISOString() },
+        ip_address: ip,
+      });
+      return json({ error: "Invalid username/email or password." }, 401, {
+        "X-RateLimit-Remaining": String(rl.rem),
+      });
+    }
+
+    // Issue your own cookie (no Supabase session needed)
+    const token = createSessionPayload({
+      id: admin.id,
+      username: admin.username,
+      email: admin.email ?? undefined,
+      is_admin: admin.is_admin,
+      created_at: admin.created_at,
+      updated_at: admin.updated_at,
     });
 
-    const clientIP = getClientIP(request);
-
-    await supabaseAdmin.from("admin_activity_log").insert({
-      admin_id: user.id,
-      action_type: "LOGIN",
-      ip_address: clientIP,
-    });
-
-    // === DEBUG LOG: Session Token Generated
-    console.log("Session Token:", sessionToken);
-    console.log("[LOGIN SUCCESS] ==============\n");
-
-    const response = NextResponse.json(
-      {
-        success: true,
-        user: {
-          id: user.id,
-          username: user.username,
-          is_admin: user.is_admin,
-        },
-      },
-      { status: 200 }
+    const res = json(
+      { message: "Login successful", user: { id: admin.id, username: admin.username, email: admin.email, isAdmin: admin.is_admin } },
+      200,
+      { "X-RateLimit-Remaining": String(rl.rem) }
     );
-
-    response.cookies.set("admin-session", sessionToken, {
+    res.cookies.set("admin-session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", 
-      sameSite: "lax", 
-      maxAge: 24 * 60 * 60, // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
 
-    return response;
-  } catch (error) {
-    console.error("[LOGIN ERROR]:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    await logActivity({
+      admin_id: admin.id,
+      action_type: "LOGIN_SUCCESS",
+      record_id: admin.id,
+      changes: { identifier, ts: new Date().toISOString() },
+      ip_address: ip,
+    });
+
+    return res;
+  } catch (e) {
+    console.error("Login error:", e);
+    return json({ error: "Internal server error." }, 500);
   }
+}
+
+export async function GET() {
+  return json({ error: "Method not allowed" }, 405, { Allow: "POST" });
 }

@@ -3,6 +3,32 @@
 export interface Database {
   public: {
     Tables: {
+      transactions: {
+        Row: {
+          id: string;
+          external_id: string;
+          amount: number;
+          status: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
+          items: Json;
+          customer_details: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          external_id: string;
+          amount: number;
+          status?: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
+          items: Json;
+          customer_details?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
+          updated_at?: string;
+        };
+      };
       admin: {
         Row: {
           id: string
@@ -190,3 +216,6 @@ export interface Database {
     }
   }
 }
+
+// Helper type for JSON columns
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];

@@ -6,6 +6,8 @@
 import React, { useState } from 'react';
 import useSiteSettings from '@/lib/hooks/useSiteSettings';
 import LihatDetailPaketButton from './LihatDetailPaketButton';
+import { useCart } from './cart/CartProvider';
+import { ShoppingCart } from 'lucide-react';
 
 interface ProgramCard {
   id: number;
@@ -24,10 +26,9 @@ interface ProgramCard {
 
 const ProgramSection: React.FC = () => {
   const { settings } = useSiteSettings();
-  // STATE: expand/collapse per card, by id
+  const { addItem } = useCart();
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
-  // Get program list from settings or fallback
   const programs: ProgramCard[] = settings?.programs?.length
     ? settings.programs.map((p: any) => ({
       ...p,
@@ -108,7 +109,6 @@ const ProgramSection: React.FC = () => {
       }
     ];
 
-  // WhatsApp admin number
   const wa = settings?.contact_whatsapp || '6285646877888';
   const waLink = (msg: string) =>
     `https://wa.me/${wa.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
@@ -116,6 +116,15 @@ const ProgramSection: React.FC = () => {
   const formatPrice = (price: number | string) => {
     const n = typeof price === 'number' ? price : parseInt(price.toString().replace(/\D/g, ''));
     return 'Rp ' + n.toLocaleString('id-ID');
+  };
+
+  const handleAddToCart = (program: ProgramCard) => {
+    addItem({
+      id: `program-${program.id}`,
+      name: program.name,
+      price: typeof program.price === 'string' ? parseInt(program.price) : program.price,
+      qty: 1,
+    });
   };
 
   const handleWhatsAppClick = (program?: ProgramCard) => {
@@ -236,12 +245,13 @@ Terima kasih!`;
 
                   {/* CTA Buttons */}
                   <div className="space-y-3">
-                    <button
-                      onClick={() => handleWhatsAppClick(program)}
-                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${program.isPopular
+                     <button
+                      onClick={() => handleAddToCart(program)}
+                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${program.isPopular
                         ? 'bg-red-600 hover:bg-red-700 text-white'
                         : 'bg-primary-orange hover:bg-orange-600 text-white'
                         }`}>
+                        <ShoppingCart className="w-4 h-4" />
                       {program.ctaText || 'Ambil Paket Ini'}
                     </button>
 

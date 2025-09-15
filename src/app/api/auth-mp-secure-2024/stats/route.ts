@@ -1,20 +1,12 @@
-// File path: src\app\api\auth-mp-secure-2024\stats\route.ts
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// File path: src/app/api/auth-mp-secure-2024/stats/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifySessionPayload } from '@/lib/auth/utils';
 
-type AdminLog = {
-    log_id: string;
-    action_type: string;
-    changes: { username?: string } | null;
-    ip_address: string | null;
-    created_at: string;
-    admin: { username: string } | { username: string }[] | null; 
-};
-
 export async function GET(request: NextRequest) {
   try {
+    // Verify the current user is an authenticated admin
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized: No session token' }, { status: 401 });
@@ -25,55 +17,81 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('admin_activity_log')
-      .select('log_id, action_type, changes, ip_address, created_at, admin(username)') 
-      .order('created_at', { ascending: false })
-      .limit(5);
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('admin_activity_log')
+        .select('log_id, action_type, ip_address, created_at, admin_id, changes')
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-    if (error) {
-      console.error('Activity fetching error:', error);
-      return NextResponse.json({ error: 'Failed to fetch recent activity' }, { status: 500 });
-    }
-    
-    const activity: AdminLog[] = data || [];
+      if (error) {
+        console.error('Activity fetching error:', error);
+        // Return empty array instead of error to prevent dashboard breaking
+        return NextResponse.json([], { status: 200 });
+      }
 
-    const formattedActivity = activity.map(log => {
-        let details = `Action: ${log.action_type}`;
+      const activity = data || [];
+
+      // Simple formatting without complex admin username lookups
+      const formattedActivity = activity.map(log => {
+        const details = getActivityDescription(log.action_type, log.changes);
         
-        let adminUsername = 'An admin';
-        if (log.admin) {
-          if (Array.isArray(log.admin) && log.admin.length > 0) {
-            adminUsername = log.admin[0].username || adminUsername;
-          } else if (!Array.isArray(log.admin)) {
-            adminUsername = (log.admin as { username: string }).username || adminUsername;
-          }
-        }
-        
-        const changes = log.changes;
-
-        switch(log.action_type) {
-            case 'LOGIN':
-                details = `${adminUsername} logged in.`;
-                break;
-            case 'LOGOUT':
-                details = `${adminUsername} logged out.`;
-                break;
-            case 'CREATE_ADMIN':
-                details = `${adminUsername} created a new user: "${changes?.username || 'N/A'}".`;
-                break;
-        }
         return {
-            id: log.log_id,
-            details: details,
-            timestamp: log.created_at,
+          id: log.log_id,
+          action_type: log.action_type,
+          details: details,
+          created_at: log.created_at,
+          ip_address: log.ip_address,
         };
-    });
+      });
 
-    return NextResponse.json(formattedActivity, { status: 200 });
+      return NextResponse.json(formattedActivity, { status: 200 });
+
+    } catch (dbError) {
+      console.error('Database error fetching activity:', dbError);
+      // Return empty array instead of failing completely
+      return NextResponse.json([], { status: 200 });
+    }
 
   } catch (error) {
-    console.error('Activity route error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Stats route error:', error);
+    // Return empty array instead of failing completely
+    return NextResponse.json([], { status: 200 });
+  }
+}
+
+// Helper function to generate activity descriptions
+function getActivityDescription(actionType: string, changes: any): string {
+  try {
+    const parsedChanges = typeof changes === 'string' ? JSON.parse(changes) : changes;
+    
+    switch (actionType) {
+      case 'LOGIN_SUCCESS':
+        return `Successful login${parsedChanges?.login_method ? ` via ${parsedChanges.login_method}` : ''}`;
+      
+      case 'LOGIN_FAILED':
+        return `Failed login attempt${parsedChanges?.reason ? ` (${parsedChanges.reason})` : ''}`;
+      
+      case 'LOGOUT':
+        return 'User logged out';
+      
+      case 'CREATE_ADMIN':
+        return `Created new admin user${parsedChanges?.username ? `: ${parsedChanges.username}` : ''}`;
+      
+      case 'DELETE_ADMIN':
+        return `Deleted admin user${parsedChanges?.deleted_username ? `: ${parsedChanges.deleted_username}` : ''}`;
+      
+      case 'GOOGLE_AUTH_SUCCESS':
+        return 'Successful Google authentication';
+      
+      case 'GOOGLE_AUTH_FAILED':
+        return 'Failed Google authentication attempt';
+      
+      default:
+        return `${actionType.replace(/_/g, ' ').toLowerCase()}`;
+    }
+  } catch {
+    // If changes parsing fails, just return the action type
+    return actionType.replace(/_/g, ' ').toLowerCase();
   }
 }

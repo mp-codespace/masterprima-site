@@ -1,22 +1,19 @@
-// File path: src/lib/supabase/client.ts
+// File: src/lib/supabase/client.ts
 
-import { createClient } from '@supabase/supabase-js';
-
-// This file is for CLIENT-SIDE use.
-// It only uses environment variables prefixed with NEXT_PUBLIC_.
+// NOTE: Use this ONLY in Client Components / the browser.
+// For server/RSC or route handlers, use a separate server client via @supabase/ssr.
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL or Anon Key is missing from public environment variables.');
+  throw new Error('Supabase URL or Anon Key is missing from public environment variables.');
 }
 
-// Create and export the client-side Supabase client.
-// This is safe to use in browser components.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
+/**
+ * Single shared browser client.
+ * createBrowserClient handles session persistence & token refresh for you,
+ * so you no longer need the manual auth/storage options.
+ */
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);

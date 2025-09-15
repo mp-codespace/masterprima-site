@@ -1,42 +1,60 @@
+// File path: src\app\api\auth-mp-secure-2024\hash-password\route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { hashPassword } from '@/lib/auth/utils';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
 
-/**
- * A temporary utility endpoint to securely hash a password.
- * Use this to generate a hashed password for your admin user,
- * then manually update it in your Supabase database.
- * * To use: Send a POST request to this endpoint with a JSON body
- * like { "password": "your_new_password" }.
- * * !!IMPORTANT!!: For security, you should remove this API route 
- * file after you have finished using it.
- */
+// Validation schema
+const hashSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+  rounds: z.number().min(10).max(15).optional().default(12)
+});
+
 export async function POST(request: NextRequest) {
   try {
+    // Parse and validate request body
     const body = await request.json();
-    const { password } = body;
+    const validationResult = hashSchema.safeParse(body);
 
-    if (!password || typeof password !== 'string') {
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.issues[0]?.message || 'Invalid input data';
       return NextResponse.json(
-        { error: 'Password is required and must be a string' },
+        { error: errorMessage },
         { status: 400 }
       );
     }
 
-    const hashedPassword = hashPassword(password);
+    const { password, rounds } = validationResult.data;
 
+    // Generate bcrypt hash
+    const hash = await bcrypt.hash(password, rounds);
+
+    // Return the hash
     return NextResponse.json(
       {
-        originalPassword: password,
-        hashedPassword: hashedPassword,
+        password: password,
+        hash: hash,
+        rounds: rounds,
+        message: 'Hash generated successfully'
       },
       { status: 200 }
     );
 
   } catch (error) {
-    console.error('Password hashing error:', error);
+    console.error('Hash generation error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+// Handle other HTTP methods
+export async function GET() {
+  return NextResponse.json(
+    { 
+      error: 'Method not allowed',
+      usage: 'POST with JSON body: {"password": "your_password", "rounds": 12}'
+    },
+    { status: 405, headers: { 'Allow': 'POST' } }
+  );
 }

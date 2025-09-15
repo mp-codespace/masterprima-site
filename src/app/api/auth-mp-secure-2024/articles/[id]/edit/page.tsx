@@ -77,7 +77,7 @@ export default function EditArticlePage() {
         setSuccess('Article updated successfully!');
         setTimeout(() => {
             router.push('/auth-mp-secure-2024/dashboard/articles');
-            router.refresh(); // Tells Next.js to refetch server data on the articles page
+            router.refresh(); 
         }, 1500);
 
     } catch (err) {
@@ -91,7 +91,7 @@ export default function EditArticlePage() {
     return <div className="text-center p-10">Loading article editor...</div>;
   }
   
-  if (error && !article) { // Show full-page error if article couldn't be loaded
+  if (error && !article) { 
     return <div className="bg-red-100 p-4 rounded-lg text-red-700">{error}</div>;
   }
 

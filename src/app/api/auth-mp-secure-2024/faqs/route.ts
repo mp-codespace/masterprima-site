@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY! // pakai service-role untuk write/delete!
 );
 
-// GET - Ambil semua FAQ
+// GET - semua FAQ
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -27,7 +27,7 @@ export async function GET() {
   }
 }
 
-// POST - Tambah FAQ baru
+// POST - FAQ baru
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -6,7 +6,7 @@ import { verifySessionPayload } from '@/lib/auth/utils';
 
 export async function GET(request: NextRequest) {
   try {
-    // 1. Authenticate the request
+    // Authenticate the request
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 2. Fetch article status counts in parallel
+    // Fetch article status counts in parallel
     const [
       { count: publishedCount, error: publishedError },
       { count: draftCount, error: draftError }
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to fetch chart data.');
     }
 
-    // 3. Format data for the chart component
+    // Format data for the chart component
     const chartData = [
         { name: 'Published', value: publishedCount ?? 0, fill: '#22c55e' }, // green-500
         { name: 'Drafts', value: draftCount ?? 0, fill: '#3b82f6' }, // blue-500

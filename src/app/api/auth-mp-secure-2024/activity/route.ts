@@ -17,7 +17,6 @@ type AdminLog = {
 
 export async function GET(request: NextRequest) {
   try {
-    // 1. Verify the current user is an authenticated admin
     const sessionToken = request.cookies.get('admin-session')?.value;
     if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized: No session token' }, { status: 401 });
@@ -28,10 +27,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // 2. Fetch the 5 most recent activity logs
     const { data, error } = await supabaseAdmin
       .from('admin_activity_log')
-      .select('log_id, action_type, changes, ip_address, created_at, admin(username)') // Join with admin table to get username
+      .select('log_id, action_type, changes, ip_address, created_at, admin(username)') 
       .order('created_at', { ascending: false })
       .limit(5);
 
@@ -42,7 +40,6 @@ export async function GET(request: NextRequest) {
     
     const activity: AdminLog[] = data || [];
 
-    // 3. Format the data for the frontend
     const formattedActivity = activity.map(log => {
         let details = `Action: ${log.action_type}`;
         

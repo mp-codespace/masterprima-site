@@ -4,18 +4,20 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Check, Clock, Users, BookOpen, Star, Shield, Phone } from 'lucide-react';
+import { ArrowLeft, Check, Clock, Users, BookOpen, Star, Shield, Phone, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useSiteSettings from '@/lib/hooks/useSiteSettings';
+import { useCart } from './cart/CartProvider';
 
 interface LihatDetailPaketProps {
   data: any;
   type: 'program' | 'plan';
 }
 
-const LihatDetailPaket: React.FC<LihatDetailPaketProps> = ({ data }) => {
+const LihatDetailPaket: React.FC<LihatDetailPaketProps> = ({ data, type }) => {
   const router = useRouter();
   const { settings } = useSiteSettings();
+  const { addItem } = useCart();
 
   // Get contact info from settings
   const wa = settings?.contact_whatsapp || '6285646877888';
@@ -25,6 +27,15 @@ const LihatDetailPaket: React.FC<LihatDetailPaketProps> = ({ data }) => {
   const formatPrice = (price: number | string) => {
     const n = typeof price === 'number' ? price : parseInt(price.toString().replace(/\D/g, ''));
     return 'Rp ' + n.toLocaleString('id-ID');
+  };
+
+  const handleAddToCart = () => {
+    addItem({
+      id: type === 'plan' ? data.plan_id : `program-${data.id}`,
+      name: data.name,
+      price: data.price,
+      qty: 1,
+    });
   };
 
   const handleWhatsAppReservation = () => {
@@ -213,6 +224,13 @@ Terima kasih!`;
                 </p>
                 
                 <div className="space-y-3">
+                   <button
+                    onClick={handleAddToCart}
+                    className="w-full bg-primary-orange hover:bg-orange-600 text-white px-4 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Tambah ke Keranjang
+                  </button>
                   <button
                     onClick={handleWhatsAppReservation}
                     className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
@@ -233,7 +251,7 @@ Terima kasih!`;
                   
                   <button
                     onClick={handleEmailContact}
-                    className="w-full bg-primary-orange hover:bg-orange-600 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
+                    className="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
                   >
                     Email
                   </button>

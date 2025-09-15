@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 interface TestimoniItem {
   id: number;
@@ -15,6 +16,7 @@ interface TestimoniItem {
   score?: string;
   year: string;
   verified: boolean;
+  image_url?: string; // Added image URL field
 }
 
 const defaultTestimoni: TestimoniItem = {
@@ -32,7 +34,7 @@ const Testimoni: React.FC = () => {
   const [testimoni, setTestimoni] = useState<TestimoniItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Ambil data dari API baru
+  // Fetch testimonials from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -53,6 +55,7 @@ const Testimoni: React.FC = () => {
             score: item.score || '',
             year: item.year || '',
             verified: item.verified ?? true,
+            image_url: item.image_url || '', // Include image URL
           })));
         } else {
           setTestimoni([defaultTestimoni]);
@@ -65,7 +68,7 @@ const Testimoni: React.FC = () => {
     fetchData();
   }, []);
 
-  // --- Slider state logic ---
+  // Slider state logic
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [itemsPerView, setItemsPerView] = useState(3);
@@ -123,7 +126,57 @@ const Testimoni: React.FC = () => {
   const getInitials = (name: string) =>
     name?.split(' ').map(n => n[0]).join('').toUpperCase();
 
-  // Dummy: jika ingin statistik dari Supabase, fetch manual, atau pakai siteSettings kalau sudah support field statistik
+  // Profile Avatar Component with image support
+  const ProfileAvatar = ({ item }: { item: TestimoniItem }) => {
+    const [imageError, setImageError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const handleImageLoad = () => {
+      setIsLoading(false);
+    };
+
+    const handleImageError = () => {
+      setImageError(true);
+      setIsLoading(false);
+    };
+
+    // If no image URL or image failed to load, show initials
+    if (!item.image_url || imageError) {
+      return (
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-semibold text-xs sm:text-sm">
+            {getInitials(item.name)}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+        {isLoading && (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-xs sm:text-sm">
+              {getInitials(item.name)}
+            </span>
+          </div>
+        )}
+        <Image
+          src={item.image_url}
+          alt={`Profile photo of ${item.name}`}
+          width={48}
+          height={48}
+          className={`w-full h-full object-cover rounded-full border-2 border-white shadow-sm transition-opacity duration-300 ${
+            isLoading ? 'opacity-0' : 'opacity-100'
+          }`}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          unoptimized // Allow external images
+        />
+      </div>
+    );
+  };
+
+  // Statistics (can be fetched from API or settings if needed)
   const alumniCount = 500;
   const successRate = 98;
 
@@ -182,13 +235,9 @@ const Testimoni: React.FC = () => {
                 >
                   <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
                     <div className="p-4 sm:p-5 lg:p-6 flex flex-col h-full">
-                      {/* Header */}
+                      {/* Header with Profile Image */}
                       <div className="flex items-start space-x-3 mb-4 flex-shrink-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-semibold text-xs sm:text-sm">
-                            {getInitials(item.name)}
-                          </span>
-                        </div>
+                        <ProfileAvatar item={item} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <h4 className="font-semibold text-neutral-charcoal text-sm sm:text-base font-plus-jakarta truncate">
@@ -209,16 +258,19 @@ const Testimoni: React.FC = () => {
                           {item.year}
                         </div>
                       </div>
+
                       {/* Rating */}
                       <div className="flex items-center space-x-1 mb-4 flex-shrink-0">
                         {renderStars(item.rating)}
                       </div>
+
                       {/* Review */}
                       <div className="mb-4 flex-grow">
                         <p className="text-neutral-dark-gray text-xs sm:text-sm font-plus-jakarta leading-relaxed italic relative pl-3 border-l-2 sm:border-l-3 border-red-200">
                           {item.review}
                         </p>
                       </div>
+
                       {/* Score */}
                       {item.score && item.score !== "" && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex-shrink-0 mt-auto">

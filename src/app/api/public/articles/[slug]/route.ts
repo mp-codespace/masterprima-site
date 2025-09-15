@@ -7,10 +7,8 @@ export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
-  // Await params karena Next.js 15 menjadikan params sebagai Promise
   const { slug } = await context.params;
 
-  // Query ke Supabase untuk artikel dengan slug yang cocok dan published = true
   const { data, error } = await supabaseAdmin
     .from('articles')
     .select(
@@ -20,12 +18,10 @@ export async function GET(
     .eq('is_published', true)
     .single();
 
-  // Jika error atau data tidak ditemukan, kembalikan 404
   if (error || !data) {
     return NextResponse.json({ error: 'Article not found' }, { status: 404 });
   }
 
-  // Normalisasi tags: pastikan selalu array string
   const normalizedArticle = {
     ...data,
     tags: Array.isArray(data.tags)
